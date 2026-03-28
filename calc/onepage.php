@@ -1,0 +1,725 @@
+<?php
+// ══════════════════════════════════════════════════════
+//  KONFIGURATION – nur diese Zeilen anpassen:
+// ══════════════════════════════════════════════════════
+define('SMTP_HOST',      'smtp.strato.de');
+define('SMTP_PORT',      465);
+define('SMTP_USER',      'hallo@chris-fenske.de');
+define('SMTP_PASS',      '6RojcpFWXlzwOa8FZuDp');
+define('SMTP_FROM',      'hallo@chris-fenske.de');
+define('SMTP_FROM_NAME', 'uhlsport Kalkulation');
+define('BCC_FIXED',      'cfenske@uhlsport.de');
+// ══════════════════════════════════════════════════════
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require_once __DIR__ . '/phpmailer/Exception.php';
+require_once __DIR__ . '/phpmailer/SMTP.php';
+require_once __DIR__ . '/phpmailer/PHPMailer.php';
+
+function smtp_send(array $recipients, string $subject, string $html_body): array {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP(); $mail->Host = SMTP_HOST; $mail->SMTPAuth = true;
+        $mail->Username = SMTP_USER; $mail->Password = SMTP_PASS;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; $mail->Port = SMTP_PORT;
+        $mail->CharSet = 'UTF-8'; $mail->Encoding = 'base64'; $mail->Timeout = 30;
+        $mail->setFrom(SMTP_FROM, SMTP_FROM_NAME);
+        $mail->addReplyTo(SMTP_FROM, SMTP_FROM_NAME);
+        foreach ($recipients as $addr) { $mail->addAddress(trim($addr)); }
+        $mail->addBCC(BCC_FIXED);
+        $mail->isHTML(true); $mail->Subject = $subject; $mail->Body = $html_body;
+        $mail->AltBody = strip_tags(str_replace(['<br>','<br/>','<br />'], "\n", $html_body));
+        $mail->send();
+        return ['ok' => true, 'message' => 'E-Mail gesendet an: ' . implode(', ', $recipients)];
+    } catch (Exception $e) {
+        return ['ok' => false, 'error' => 'Mailer-Fehler: ' . $mail->ErrorInfo];
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
+    if (strpos($contentType, 'application/json') !== false) {
+        header('Content-Type: application/json; charset=utf-8');
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true);
+        if (!$data || !isset($data['html']) || !isset($data['recipients'])) {
+            http_response_code(400); echo json_encode(['ok'=>false,'error'=>'Ungültige Anfrage.']); exit;
+        }
+        $recipients = array_values(array_filter(array_map('trim', $data['recipients'])));
+        if (empty($recipients)) {
+            http_response_code(400); echo json_encode(['ok'=>false,'error'=>'Keine Empfänger.']); exit;
+        }
+        $result = smtp_send($recipients, $data['subject'] ?? 'Ausrüstungsvertrag', $data['html']);
+        if (!$result['ok']) http_response_code(500);
+        echo json_encode($result); exit;
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>uhlsport — Kalkulation Ausrüstungsverträge</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ── ONE-PAGE OVERRIDES ── */
+
+/* All sections always visible, stacked with gap */
+.op-section {
+  border: 1.5px solid var(--border);
+  margin-bottom: 24px;
+  background: var(--white);
+}
+.op-section-header {
+  display: flex; align-items: center; gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--gray-50);
+  cursor: pointer; user-select: none;
+}
+.op-section-header:hover { background: var(--gray-100); }
+.op-section-num {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  color: var(--white); background: var(--black);
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; letter-spacing: 0;
+}
+.op-section-title {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--black);
+  flex: 1;
+}
+.op-section-desc {
+  font-size: 12px; color: var(--gray-400); max-width: 400px;
+  text-align: right; line-height: 1.4;
+}
+.op-section-chevron {
+  flex-shrink: 0; transition: transform 0.2s;
+  color: var(--gray-400);
+}
+.op-section.collapsed .op-section-chevron { transform: rotate(-90deg); }
+.op-section-body {
+  padding: 24px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+}
+.op-section.collapsed .op-section-body {
+  max-height: 0 !important;
+  padding-top: 0; padding-bottom: 0;
+}
+
+/* Result section */
+.op-result {
+  border: 1.5px solid var(--border);
+  margin-bottom: 100px;
+  display: none;
+}
+.op-result.visible { display: block; }
+.op-result-header {
+  padding: 18px 24px;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--gray-50);
+  display: flex; align-items: center; gap: 12px;
+}
+.op-result-header-title {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--black);
+}
+.op-result-body { padding: 0; }
+
+/* Sticky bottom bar with calculate button */
+.op-sticky {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 299;
+  background: var(--white); border-top: 2px solid var(--black);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.op-sticky-inner {
+  max-width: 900px; width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.op-sticky-preview {
+  display: flex; gap: 24px; align-items: center;
+}
+.op-sticky-pill { display: flex; flex-direction: column; }
+.op-sticky-lbl {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--gray-400);
+}
+.op-sticky-val {
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--black);
+}
+.op-sticky-val.pos { color: var(--green); }
+.op-sticky-val.neg { color: var(--red); }
+.op-calc-btn {
+  display: flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 32px;
+  background: var(--black); border: none; color: var(--white);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.op-calc-btn:hover { background: var(--gray-600); }
+.op-action-btns { display: flex; gap: 8px; }
+
+/* Remove wizard chrome */
+.stepper, .btn-row, .card-eyebrow { display: none !important; }
+.card, .result-card { display: none !important; } /* hide wizard cards */
+
+/* Adjust padding for sticky bar */
+.app-wrap { padding-bottom: 80px; }
+
+/* section-head margin adjustment inside one-page */
+.op-section-body .section-head:first-child { margin-top: 0; }
+
+/* year tabs get less top margin */
+.op-section-body .year-tabs { margin-top: 0; }
+
+@media (max-width: 640px) {
+  .op-section-desc { display: none; }
+  .op-sticky-preview { gap: 12px; }
+  .op-sticky-val { font-size: 12px; }
+  .op-calc-btn { padding: 0 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="app-wrap">
+  <header class="site-header">
+    <div class="logo-wrap">
+      <img src="images/logo.png" alt="uhlsport" class="logo-img">
+      <div class="header-divider"></div>
+      <span class="header-tool">Kalkulation Ausrüstungsverträge</span>
+    </div>
+    <span class="header-date" id="headerDate"></span>
+  </header>
+
+  <!-- ══ SECTION 1: STAMMDATEN ══ -->
+  <div class="op-section" id="sec1">
+    <div class="op-section-header" onclick="toggleSection(1)">
+      <div class="op-section-num">01</div>
+      <div class="op-section-title">Allgemeine Informationen</div>
+      <div class="op-section-desc">Verein, Fachhändler, interne Ansprechpartner</div>
+      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="op-section-body" id="sec1-body">
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Verein</div><div class="section-head-line"></div></div>
+      <div class="field-grid">
+        <div class="field-group">
+          <div class="field-label">Name Verein <span class="tip">i<span class="tip-box">Vollständiger Name des Vereins, mit dem ein Ausrüstungsvertrag abgeschlossen werden soll.</span></span></div>
+          <input type="text" id="vereinName" placeholder="z. B. FC Musterstadt">
+          <span class="err-msg" id="err_vereinName">Pflichtfeld</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Liga <span class="tip">i<span class="tip-box">Aktuelle Spielklasse des Vereins – relevant für Sichtbarkeit und Umsatzpotenzial.</span></span></div>
+          <input type="text" id="liga" placeholder="Bundesliga">
+          <span class="err-msg" id="err_liga">Pflichtfeld</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Sportart</div>
+          <input type="text" id="sportart" placeholder="z. B. Fußball">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Kundennr. Freiware</div>
+          <input type="text" id="kdnrVereinFreiware" placeholder="z. B. 123456">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Kundennr. Nachkauf</div>
+          <input type="text" id="kdnrVereinNachkauf" placeholder="z. B. 123456">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Nachkauf-Kondition Verein <span class="tip">i<span class="tip-box">Dezimalzahl, z.B. 0.10 für 10%.</span></span></div>
+          <input type="number" id="vereinNachkauf" value="0" step="0.01" min="0" max="1">
+          <span class="field-hint">Dezimal, z.B. 0.10 = 10%</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Erlösschmälerungen Verein <span class="tip">i<span class="tip-box">Skonto, Boni etc. Dezimalzahl.</span></span></div>
+          <input type="number" id="vereinErloesschmaelerung" value="0" step="0.01" min="0" max="1">
+          <span class="field-hint">Dezimal, z.B. 0.05 = 5%</span>
+        </div>
+      </div>
+
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Fachhändler</div><div class="section-head-line"></div></div>
+      <div class="field-grid">
+        <div class="field-group">
+          <div class="field-label">Name Fachhändler</div>
+          <input type="text" id="haendlerName" placeholder="z. B. Teamworld">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Kundennr. Fachhändler</div>
+          <input type="text" id="kdnrHaendler" placeholder="z. B. 123456">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Nachkauf-Kondition Händler <span class="tip">i<span class="tip-box">Standard: 30% → 0.30</span></span></div>
+          <input type="number" id="haendlerNachkauf" value="0.3" step="0.01" min="0" max="1">
+          <span class="err-msg" id="err_haendlerNachkauf">Wert zwischen 0 und 1</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Einkauf Freiware Händler <span class="tip">i<span class="tip-box">Standard: 40% → 0.40</span></span></div>
+          <input type="number" id="haendlerFreiware" value="0.4" step="0.01" min="0" max="1">
+          <span class="err-msg" id="err_haendlerFreiware">Wert zwischen 0 und 1</span>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Erlösschmälerungen Händler <span class="tip">i<span class="tip-box">Standard: 8% → 0.08</span></span></div>
+          <input type="number" id="haendlerErloesschmaelerung" value="0.08" step="0.01" min="0" max="1">
+          <span class="err-msg" id="err_haendlerErloesschmaelerung">Wert zwischen 0 und 1</span>
+        </div>
+      </div>
+
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Intern</div><div class="section-head-line"></div></div>
+      <div class="field-grid">
+        <div class="field-group">
+          <div class="field-label">Außendienst</div>
+          <input type="text" id="aussendienst" placeholder="z. B. Max Mustermann">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Umsatzverantwortliche Person</div>
+          <input type="text" id="verantwortlich" placeholder="z. B. Max Mustermann">
+        </div>
+        <div class="field-group">
+          <div class="field-label">Laufzeit <span class="tip">i<span class="tip-box">Pro Jahr wird ein eigener Tab für Sponsoring und Umsatz angelegt.</span></span></div>
+          <select id="laufzeit" onchange="onLaufzeitChange()">
+            <option value="1">1 Jahr</option>
+            <option value="2">2 Jahre</option>
+            <option value="3" selected>3 Jahre</option>
+            <option value="4">4 Jahre</option>
+            <option value="5">5 Jahre</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2: QUOTIENTEN ══ -->
+  <div class="op-section collapsed" id="sec2">
+    <div class="op-section-header" onclick="toggleSection(2)">
+      <div class="op-section-num">02</div>
+      <div class="op-section-title">Interne Quotienten</div>
+      <div class="op-section-desc">COS / HEK / UVP Umrechnungsfaktoren</div>
+      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="op-section-body" id="sec2-body" style="max-height:0;padding-top:0;padding-bottom:0">
+      <div class="lock-box">
+        <input type="checkbox" id="quotientUnlock" onchange="toggleQuotientLock()">
+        <label for="quotientUnlock">Ich bestätige, dass ich die internen Quotienten ändern darf und dies <strong>mit dem zuständigen Controlling abgestimmt</strong> habe.</label>
+      </div>
+      <div class="quotient-fields" id="quotientFields">
+        <div class="field-grid">
+          <div class="field-group">
+            <div class="field-label">HEK / COS Quotient <span class="tip">i<span class="tip-box">Standard: 2.5 → HEK = 2,5 × COS.</span></span></div>
+            <input type="number" id="hekCosQuotient" value="2.5" step="0.1" min="1">
+            <span class="field-hint">Standard: 2.5</span>
+          </div>
+          <div class="field-group">
+            <div class="field-label">UVP / COS Quotient <span class="tip">i<span class="tip-box">Standard: 5.0 → UVP = 5 × COS.</span></span></div>
+            <input type="number" id="uvpCosQuotient" value="5.0" step="0.1" min="1">
+            <span class="field-hint">Standard: 5.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 3: QUALITATIV ══ -->
+  <div class="op-section collapsed" id="sec3">
+    <div class="op-section-header" onclick="toggleSection(3)">
+      <div class="op-section-num">03</div>
+      <div class="op-section-title">Qualitative Beurteilung</div>
+      <div class="op-section-desc">Strategische Einschätzungen zu Verein & Händler</div>
+      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="op-section-body" id="sec3-body" style="max-height:0;padding-top:0;padding-bottom:0">
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Verein</div><div class="section-head-line"></div></div>
+      <div class="field-grid cols-1">
+        <div class="field-group">
+          <div class="field-label">Qualitative Beurteilung Verein</div>
+          <textarea id="qualVerein" placeholder="z.B. Aufsteiger in die 1. Liga, starke Social-Media-Präsenz..."></textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Warum dieser Verein?</div>
+          <textarea id="warumVerein" placeholder="z.B. Bundesliga-Aufsteiger mit großer Medienpräsenz..."></textarea>
+        </div>
+      </div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Fachhandel</div><div class="section-head-line"></div></div>
+      <div class="field-grid cols-1">
+        <div class="field-group">
+          <div class="field-label">Qualitative Beurteilung Fachhandel</div>
+          <textarea id="qualHandel" placeholder="z.B. Langjähriger Partner, hohe Beratungskompetenz..."></textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Andere Vereine beim Händler?</div>
+          <textarea id="andereVereine" placeholder="z.B. TSV Beispielstadt (Landesliga)..."></textarea>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Zusätzliche Umsatzpotenziale?</div>
+          <textarea id="umsatzPotenziale" placeholder="z.B. Mitglieder-Aktionen geplant..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 4: SPONSORING ══ -->
+  <div class="op-section collapsed" id="sec4">
+    <div class="op-section-header" onclick="toggleSection(4)">
+      <div class="op-section-num">04</div>
+      <div class="op-section-title">Sponsoring-Leistungen</div>
+      <div class="op-section-desc">Cash & Freiware pro Vertragsjahr</div>
+      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="op-section-body" id="sec4-body" style="max-height:0;padding-top:0;padding-bottom:0">
+      <div id="yearTabsContainer" class="year-tabs"></div>
+      <div id="yearPanelsContainer"></div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 5: UMSÄTZE ══ -->
+  <div class="op-section collapsed" id="sec5">
+    <div class="op-section-header" onclick="toggleSection(5)">
+      <div class="op-section-num">05</div>
+      <div class="op-section-title">Umsatzplanung</div>
+      <div class="op-section-desc">Verein direkt, Händler direkt & indirekt</div>
+      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="op-section-body" id="sec5-body" style="max-height:0;padding-top:0;padding-bottom:0">
+      <div id="umsatzYearTabsContainer" class="year-tabs"></div>
+      <div id="umsatzYearPanelsContainer"></div>
+    </div>
+  </div>
+
+  <!-- ══ ERGEBNIS ══ -->
+  <div class="op-result" id="opResult">
+    <div class="op-result-header">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <div class="op-result-header-title">Kalkulations-Ergebnis</div>
+    </div>
+    <div class="op-result-body">
+      <div id="resultContent"></div>
+      <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:8px">
+        <button class="pdf-btn" onclick="exportPDF()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Kalkulation als PDF speichern
+        </button>
+        <button class="email-btn" onclick="openEmailModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
+          Auswertung per E-Mail senden
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-wrap -->
+
+<!-- ══ STICKY BOTTOM BAR ══ -->
+<div class="op-sticky">
+  <div class="op-sticky-inner">
+    <div class="op-sticky-preview">
+      <div class="op-sticky-pill">
+        <span class="op-sticky-lbl">Nettoumsatz</span>
+        <span class="op-sticky-val" id="liveNetto">–</span>
+      </div>
+      <div class="op-sticky-pill">
+        <span class="op-sticky-lbl">Invest</span>
+        <span class="op-sticky-val" id="liveInvest">–</span>
+      </div>
+      <div class="op-sticky-pill">
+        <span class="op-sticky-lbl">Deckungsbeitrag</span>
+        <span class="op-sticky-val" id="liveDB">–</span>
+      </div>
+      <div class="op-sticky-pill">
+        <span class="op-sticky-lbl">DB-Quote</span>
+        <span class="op-sticky-val" id="liveDBQ">–</span>
+      </div>
+    </div>
+    <div class="op-action-btns">
+      <button class="op-calc-btn" onclick="opBerechnen()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Kalkulation berechnen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Email Modal (shared from app.js) -->
+<div class="email-modal-overlay" id="emailModalOverlay" onclick="closeEmailModal(event)">
+  <div class="email-modal" onclick="event.stopPropagation()">
+    <div class="email-modal-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="vertical-align:-2px;margin-right:8px"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
+      Auswertung per E-Mail senden
+    </div>
+    <p class="email-modal-sub">Die Kalkulation wird als formatierte E-Mail zugestellt. Mehrere Adressen mit Enter oder Komma bestätigen.</p>
+    <div class="email-modal-fixed">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Immer im BCC: <span>cfenske@uhlsport.de</span>
+    </div>
+    <div class="email-tag-input" id="emailTagInput" onclick="document.getElementById('emailRawInput').focus()">
+      <input type="text" id="emailRawInput" class="email-tag-input-field" placeholder="E-Mail-Adresse eingeben …" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="email-modal-hint">Enter oder Komma = Adresse hinzufügen · Klick auf × = entfernen</div>
+    <div class="email-modal-err" id="emailErr"></div>
+    <div class="email-modal-actions">
+      <button class="email-cancel-btn" onclick="closeEmailModal()">Abbrechen</button>
+      <button class="email-send-btn" id="emailSendBtn" onclick="sendEmail()">
+        <div class="spinner"></div>
+        <span class="send-label">Jetzt senden</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+// ── ONE-PAGE SPECIFIC LOGIC ──
+
+// Section toggle (accordion)
+function toggleSection(n) {
+  const sec = document.getElementById('sec'+n);
+  const body = document.getElementById('sec'+n+'-body');
+  const isCollapsed = sec.classList.contains('collapsed');
+  if (isCollapsed) {
+    sec.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    // Re-measure after content loads (tabs etc.)
+    setTimeout(() => { body.style.maxHeight = body.scrollHeight + 'px'; }, 50);
+  } else {
+    sec.classList.add('collapsed');
+    body.style.maxHeight = '0';
+  }
+}
+
+// Expand all sections initially after a short delay (so scrollHeight is correct)
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('headerDate').textContent =
+    new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  initYearsFresh(3);
+  buildSponsoringUI();
+  buildUmsatzUI();
+  // Expand section 1 (already open), keep others collapsed
+  const sec1body = document.getElementById('sec1-body');
+  sec1body.style.maxHeight = sec1body.scrollHeight + 'px';
+});
+
+// When laufzeit changes, rebuild year UIs
+function onLaufzeitChange() {
+  const n = parseInt(document.getElementById('laufzeit').value);
+  collectStammdaten();
+  initYears(n);
+  buildSponsoringUI();
+  buildUmsatzUI();
+  // Re-measure open sections
+  [4,5].forEach(i => {
+    const sec = document.getElementById('sec'+i);
+    const body = document.getElementById('sec'+i+'-body');
+    if (!sec.classList.contains('collapsed')) {
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+}
+
+// Collect all data from DOM at once (no step concept)
+function collectStammdaten() {
+  state.vereinName=gv('vereinName'); state.liga=gv('liga'); state.sportart=gv('sportart')||'';
+  state.aussendienst=gv('aussendienst'); state.verantwortlich=gv('verantwortlich');
+  state.laufzeit=parseInt(gv('laufzeit')); state.haendlerName=gv('haendlerName');
+  state.kdnrVereinFreiware=gv('kdnrVereinFreiware'); state.kdnrVereinNachkauf=gv('kdnrVereinNachkauf');
+  state.kdnrHaendler=gv('kdnrHaendler');
+  state.haendlerNachkauf=pf('haendlerNachkauf'); state.haendlerFreiware=pf('haendlerFreiware');
+  state.haendlerErloesschmaelerung=pf('haendlerErloesschmaelerung');
+  state.vereinNachkauf=pf('vereinNachkauf'); state.vereinErloesschmaelerung=pf('vereinErloesschmaelerung');
+  state.hekCosQuotient=pf('hekCosQuotient'); state.uvpCosQuotient=pf('uvpCosQuotient');
+  state.qualVerein=gv('qualVerein'); state.warumVerein=gv('warumVerein');
+  state.qualHandel=gv('qualHandel'); state.andereVereine=gv('andereVereine');
+  state.umsatzPotenziale=gv('umsatzPotenziale');
+}
+
+// Validate required fields
+function opValidate() {
+  let ok = true; let firstErr = null;
+  const check = (id, invalid) => {
+    if (invalid) {
+      showErr(id); ok = false;
+      if (!firstErr) firstErr = id;
+    } else hideErr(id);
+  };
+  check('vereinName', !gv('vereinName'));
+  check('liga', !gv('liga'));
+  ['haendlerNachkauf','haendlerFreiware','haendlerErloesschmaelerung'].forEach(id => {
+    const v = parseFloat(normNum(document.getElementById(id)?.value));
+    check(id, isNaN(v)||v<0||v>1);
+  });
+  if (!ok && firstErr) {
+    // Open section 1 if collapsed
+    const sec1 = document.getElementById('sec1');
+    if (sec1.classList.contains('collapsed')) toggleSection(1);
+    setTimeout(() => {
+      const el = document.getElementById(firstErr);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 150);
+  }
+  return ok;
+}
+
+// Main calculate function for one-page
+function opBerechnen() {
+  if (!opValidate()) return;
+  collectStammdaten();
+  collectSponsoringFromDOM();
+  collectUmsatzFromDOM();
+  // Call the shared berechnen logic but render differently
+  opRenderResult();
+}
+
+function opRenderResult() {
+  // Reuse the full berechnen calculation
+  const s = state;
+  const cosHekRatio = 1/s.hekCosQuotient;
+  const results = s.years.map(yr => {
+    const cashCost = yr.cash;
+    const sponsoringInvest = cashCost+(yr.freiwareMode==='hek'?yr.freiwareHek*cosHekRatio:yr.freiwareUvp*(1/s.uvpCosQuotient));
+    const freiwareCosVal = yr.freiwareMode==='hek'?yr.freiwareHek*cosHekRatio:yr.freiwareUvp*(1/s.uvpCosQuotient);
+    let vereinHekBrutto = yr.vereinUmsatzMode==='hek'?yr.vereinUmsatzHek:yr.vereinUmsatzUvp*(s.hekCosQuotient/s.uvpCosQuotient);
+    const vereinRabatt = vereinHekBrutto*s.vereinNachkauf;
+    const vereinErloess = (vereinHekBrutto-vereinRabatt)*s.vereinErloesschmaelerung;
+    const vereinNetto = vereinHekBrutto-vereinRabatt-vereinErloess;
+    const vereinCos = vereinHekBrutto*cosHekRatio;
+    const vereinDB1 = vereinNetto-vereinCos;
+    let hdHekBrutto = yr.haendlerDirektMode==='hek'?yr.haendlerDirektHek:yr.haendlerDirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
+    const hdFw = yr.haendlerFreiwareHek;
+    const hdRabatt = hdHekBrutto*s.haendlerNachkauf;
+    const hdErloess = (hdHekBrutto-hdRabatt)*s.haendlerErloesschmaelerung;
+    const hdNetto = hdHekBrutto-hdRabatt-hdErloess+hdFw;
+    const hdCos = (hdHekBrutto+hdFw)*cosHekRatio;
+    const hdDB1 = hdNetto-hdCos;
+    let hiHekBrutto = yr.haendlerIndirektMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
+    const hiRabatt = hiHekBrutto*s.haendlerNachkauf;
+    const hiErloess = (hiHekBrutto-hiRabatt)*s.haendlerErloesschmaelerung;
+    const hiNetto = hiHekBrutto-hiRabatt-hiErloess;
+    const hiCos = hiHekBrutto*cosHekRatio;
+    const hiDB1 = hiNetto-hiCos;
+    const sonstige = yr.marketingkosten+yr.logistikkosten+yr.sonstigeKosten;
+    const gesamtNetto = vereinNetto+hdNetto+hiNetto;
+    const gesamtDB = vereinDB1+hdDB1+hiDB1-sponsoringInvest-sonstige;
+    const dbQuote = gesamtNetto>0?gesamtDB/gesamtNetto:0;
+    return {label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinNetto,vereinCos,vereinDB1,hdNetto,hdCos,hdDB1,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
+  });
+  const totalNetto = results.reduce((a,r)=>a+r.gesamtNetto,0);
+  const totalInvest = results.reduce((a,r)=>a+r.sponsoringInvest+r.sonstige,0);
+  const totalDB = results.reduce((a,r)=>a+r.gesamtDB,0);
+  const totalDbQuote = totalNetto>0?totalDB/totalNetto:0;
+
+  // Store for email
+  window._lastResults = results;
+  window._lastTotals = {netto:totalNetto,invest:totalInvest,db:totalDB,dbQuote:totalDbQuote};
+
+  // Update sticky bar
+  opUpdateSticky(totalNetto, totalInvest, totalDB, totalDbQuote);
+
+  // Render result using shared renderResult
+  renderResult(results, totalNetto, totalInvest, totalDB, totalDbQuote);
+
+  // Show result section and scroll to it
+  const resultEl = document.getElementById('opResult');
+  resultEl.classList.add('visible');
+  setTimeout(() => resultEl.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+}
+
+function opUpdateSticky(netto, invest, db, dbq) {
+  const fmtK2 = n => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+  const setV = (id, val, cls) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = val;
+    el.className = 'op-sticky-val' + (cls ? ' '+cls : '');
+  };
+  setV('liveNetto', fmtK2(netto), netto>0?'pos':'');
+  setV('liveInvest', fmtK2(-invest), 'neg');
+  setV('liveDB', fmtK2(db), db>=0?'pos':'neg');
+  setV('liveDBQ', (dbq*100).toFixed(1)+'%', db>=0?'pos':'neg');
+}
+
+// Live estimate on input
+document.addEventListener('input', () => {
+  try {
+    const hek = parseFloat(normNum(document.getElementById('hekCosQuotient')?.value)) || state.hekCosQuotient;
+    const uvp = parseFloat(normNum(document.getElementById('uvpCosQuotient')?.value)) || state.uvpCosQuotient;
+    const cosR = 1/hek;
+    const hN = parseFloat(normNum(document.getElementById('haendlerNachkauf')?.value)) || state.haendlerNachkauf;
+    const hE = parseFloat(normNum(document.getElementById('haendlerErloesschmaelerung')?.value)) || state.haendlerErloesschmaelerung;
+    const vN = parseFloat(normNum(document.getElementById('vereinNachkauf')?.value)) || state.vereinNachkauf;
+    const vE = parseFloat(normNum(document.getElementById('vereinErloesschmaelerung')?.value)) || state.vereinErloesschmaelerung;
+    let tN=0,tI=0,tD=0;
+    const n = state.years.length || 3;
+    for(let i=0;i<n;i++){
+      const yr=state.years[i]||{};
+      const cash=pfId(`sp_cash_${i}`)||yr.cash||0;
+      const fwMode=yr.freiwareMode||'hek';
+      const fwH=pfId(`sp_freiwareHek_${i}`)||yr.freiwareHek||0;
+      const fwU=pfId(`sp_freiwareUvp_${i}`)||yr.freiwareUvp||0;
+      const spI=cash+(fwMode==='hek'?fwH/hek:fwU/uvp);
+      const vMode=yr.vereinUmsatzMode||'hek';
+      const vH=pfId(`um_vereinHek_${i}`)||yr.vereinUmsatzHek||0;
+      const vU=pfId(`um_vereinUvp_${i}`)||yr.vereinUmsatzUvp||0;
+      const vB=vMode==='hek'?vH:vU*(hek/uvp);
+      const vNt=vB*(1-vN)*(1-vE); const vD=vNt-vB*cosR;
+      const hdMode=yr.haendlerDirektMode||'hek';
+      const hdH=pfId(`um_hdirektHek_${i}`)||yr.haendlerDirektHek||0;
+      const hdU=pfId(`um_hdirektUvp_${i}`)||yr.haendlerDirektUvp||0;
+      const hdFw=pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0;
+      const hdB=hdMode==='hek'?hdH:hdU*(hek/uvp);
+      const hdNt=(hdB*(1-hN)*(1-hE))+hdFw; const hdD=hdNt-(hdB+hdFw)*cosR;
+      const hiMode=yr.haendlerIndirektMode||'hek';
+      const hiH=pfId(`um_hindirektHek_${i}`)||yr.haendlerIndirektHek||0;
+      const hiU=pfId(`um_hindirektUvp_${i}`)||yr.haendlerIndirektUvp||0;
+      const hiB=hiMode==='hek'?hiH:hiU*(hek/uvp);
+      const hiNt=hiB*(1-hN)*(1-hE); const hiD=hiNt-hiB*cosR;
+      const so=(pfId(`um_marketing_${i}`)||yr.marketingkosten||0)+(pfId(`um_logistik_${i}`)||yr.logistikkosten||0)+(pfId(`um_sonstige_${i}`)||yr.sonstigeKosten||0);
+      tN+=vNt+hdNt+hiNt; tI+=spI+so; tD+=vD+hdD+hiD-spI-so;
+    }
+    opUpdateSticky(tN, tI, tD, tN>0?tD/tN:0);
+  } catch(e){}
+});
+
+// Override renderResult to work with op-result container
+const _origRenderResult = renderResult;
+// renderResult is already defined in app.js and writes to #resultContent / #step6
+// We redirect step6 show to opResult show instead
+const _origShowStep6 = () => {};
+
+// Patch: after renderResult runs, hide step6, show opResult
+const __origRender = window.renderResult;
+</script>
+</body>
+</html>
+<script>
+// Patch renderResult: suppress step6 show, use opResult instead
+(function(){
+  const _orig = renderResult;
+  window.renderResult = function(results, tN, tI, tD, tQ) {
+    _orig(results, tN, tI, tD, tQ);
+    // Hide step6, it's not used in one-page mode
+    document.getElementById('step6').style.display = 'none';
+  };
+  // Also suppress the live-bar (we use sticky bar instead)
+  document.getElementById('liveBar') && (document.getElementById('liveBar').style.display = 'none');
+})();
+
+// Re-measure open sections when year UIs rebuild
+function rebuildYearUI() {
+  buildSponsoringUI();
+  buildUmsatzUI();
+  [4,5].forEach(i => {
+    const sec = document.getElementById('sec'+i);
+    const body = document.getElementById('sec'+i+'-body');
+    if (sec && body && !sec.classList.contains('collapsed')) {
+      setTimeout(() => { body.style.maxHeight = body.scrollHeight + 'px'; }, 100);
+    }
+  });
+}
+</script>
