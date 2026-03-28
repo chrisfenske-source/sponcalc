@@ -114,6 +114,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   padding-top: 0; padding-bottom: 0;
 }
 
+/* Sub-accordions inside Umsatz panels */
+.um-sub {
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.um-sub:last-child { margin-bottom: 0; }
+.um-sub-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px;
+  background: var(--gray-50);
+  cursor: pointer; user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+.um-sub.collapsed .um-sub-header { border-bottom: none; }
+.um-sub-header:hover { background: var(--gray-100); }
+.um-sub-title {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--black);
+}
+.um-sub-chevron {
+  flex-shrink: 0; transition: transform 0.2s; color: var(--gray-400);
+}
+.um-sub.collapsed .um-sub-chevron { transform: rotate(-90deg); }
+.um-sub-body {
+  overflow: hidden;
+  transition: max-height 0.25s ease, padding 0.25s ease;
+  padding: 16px;
+}
+.um-sub.collapsed .um-sub-body {
+  max-height: 0 !important;
+  padding-top: 0 !important; padding-bottom: 0 !important;
+}
+
 /* Result section */
 .op-result {
   border: 1.5px solid var(--border);
@@ -478,7 +511,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script>
 // ── ONE-PAGE SPECIFIC LOGIC ──
 
-// Section toggle (accordion)
+// Section toggle (accordion) — dynamic height
 function toggleSection(n) {
   const sec = document.getElementById('sec'+n);
   const body = document.getElementById('sec'+n+'-body');
@@ -486,11 +519,23 @@ function toggleSection(n) {
   if (isCollapsed) {
     sec.classList.remove('collapsed');
     body.style.maxHeight = body.scrollHeight + 'px';
-    // Re-measure after content loads (tabs etc.)
-    setTimeout(() => { body.style.maxHeight = body.scrollHeight + 'px'; }, 50);
+    const onEnd = () => {
+      if (!sec.classList.contains('collapsed')) body.style.maxHeight = 'none';
+      body.removeEventListener('transitionend', onEnd);
+    };
+    body.addEventListener('transitionend', onEnd);
   } else {
-    sec.classList.add('collapsed');
-    body.style.maxHeight = '0';
+    // If max-height is 'none', pin it first so CSS transition has a start value
+    if (body.style.maxHeight === 'none') {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        sec.classList.add('collapsed');
+        body.style.maxHeight = '0';
+      }));
+    } else {
+      sec.classList.add('collapsed');
+      body.style.maxHeight = '0';
+    }
   }
 }
 
