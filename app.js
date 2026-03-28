@@ -253,11 +253,11 @@ function buildUmsatzUI(){
 function buildUmsatzPanel(i,yr){
   const chev=`<svg class="um-sub-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>`;
   return`
-  <div class="um-sub" id="um_sub_verein_${i}" style="margin-top:16px">
+  <div class="um-sub collapsed" id="um_sub_verein_${i}" style="margin-top:16px">
     <div class="um-sub-header" onclick="toggleUmsatzSub('verein',${i})">
       <span class="um-sub-title">Verein — Direkter Nachkauf</span>${chev}
     </div>
-    <div class="um-sub-body" id="um_sub_verein_body_${i}">
+    <div class="um-sub-body" id="um_sub_verein_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
       <div class="field-grid">
         <div class="field-group span-2">
           <div class="field-label">Bewertung Vereinsumsatz <span class="tip">i<span class="tip-box">Bestellt der Verein direkt bei uhlsport? Zu HEK oder UVP? Bitte nur eine Option wählen.</span></span></div>
@@ -284,11 +284,11 @@ function buildUmsatzPanel(i,yr){
     </div>
   </div>
 
-  <div class="um-sub" id="um_sub_hdirekt_${i}">
+  <div class="um-sub collapsed" id="um_sub_hdirekt_${i}">
     <div class="um-sub-header" onclick="toggleUmsatzSub('hdirekt',${i})">
       <span class="um-sub-title">Fachhändler — Direktumsatz</span>${chev}
     </div>
-    <div class="um-sub-body" id="um_sub_hdirekt_body_${i}">
+    <div class="um-sub-body" id="um_sub_hdirekt_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
       <div class="field-grid">
         <div class="field-group span-2">
           <div class="field-label">Bewertung Händler-Direktumsatz <span class="tip">i<span class="tip-box">Direktumsätze des Fachhändlers mit dem Verein – entweder zu HEK oder UVP, nie beides.</span></span></div>
@@ -319,11 +319,11 @@ function buildUmsatzPanel(i,yr){
     </div>
   </div>
 
-  <div class="um-sub" id="um_sub_hindirekt_${i}">
+  <div class="um-sub collapsed" id="um_sub_hindirekt_${i}">
     <div class="um-sub-header" onclick="toggleUmsatzSub('hindirekt',${i})">
       <span class="um-sub-title">Fachhändler — Indirekter Umsatz</span>${chev}
     </div>
-    <div class="um-sub-body" id="um_sub_hindirekt_body_${i}">
+    <div class="um-sub-body" id="um_sub_hindirekt_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
       <div class="field-grid">
         <div class="field-group span-2">
           <div class="field-label">Bewertung indirekter Händlerumsatz <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
@@ -350,11 +350,11 @@ function buildUmsatzPanel(i,yr){
     </div>
   </div>
 
-  <div class="um-sub" id="um_sub_sonstige_${i}">
+  <div class="um-sub collapsed" id="um_sub_sonstige_${i}">
     <div class="um-sub-header" onclick="toggleUmsatzSub('sonstige',${i})">
       <span class="um-sub-title">Sonstige Kosten</span>${chev}
     </div>
-    <div class="um-sub-body" id="um_sub_sonstige_body_${i}">
+    <div class="um-sub-body" id="um_sub_sonstige_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
       <div class="field-grid cols-3">
         <div class="field-group">
           <div class="field-label">Marketingkosten (€) <span class="tip">i<span class="tip-box">Kosten für Marketing-Maßnahmen rund um den Vertrag.</span></span></div>
