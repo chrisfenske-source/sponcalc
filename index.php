@@ -154,9 +154,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .op-result {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
-  margin-bottom: 100px; overflow: hidden; display: none;
+  margin-bottom: 100px; overflow: hidden;
+  animation: appear 0.3s ease;
 }
-.op-result.visible { display: block; animation: appear 0.3s ease; }
 .op-result-header {
   padding: 15px 20px; border-bottom: 1px solid var(--border);
   background: var(--slate-50);
@@ -211,6 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* Hide wizard chrome */
 .stepper, .btn-row, .card-eyebrow { display: none !important; }
 .card, .result-card { display: none !important; }
+.edit-panel { display: none !important; }
 
 .app-wrap { padding-bottom: 80px; }
 .op-section-body .section-head:first-child { margin-top: 0; }
@@ -441,27 +442,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <!-- ══ ERGEBNIS ══ -->
-  <div class="op-result" id="opResult">
-    <div class="op-result-header">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <div class="op-result-header-title">Kalkulations-Ergebnis</div>
+  <div id="opResultWrapper" style="display:none">
+    <div class="umsatz-group-headline" style="margin-top:24px">
+      <div class="op-section-num" style="background:var(--primary);color:var(--white)">06</div>
+      <span class="umsatz-group-title">Ergebnis</span>
     </div>
-    <div class="op-result-body">
-      <div id="resultContent"></div>
-      <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:8px">
-        <button class="pdf-btn" onclick="exportPDF()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          Kalkulation als PDF speichern
-        </button>
-        <button class="email-btn" onclick="openEmailModal()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
-          Auswertung per E-Mail senden
-        </button>
+    <div class="op-result" id="opResult">
+      <div class="op-result-body">
+        <div id="resultContent"></div>
+        <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:8px">
+          <button class="pdf-btn" onclick="exportPDF()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Kalkulation als PDF speichern
+          </button>
+          <button class="email-btn" onclick="openEmailModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
+            Auswertung per E-Mail senden
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
 </div><!-- /app-wrap -->
+
+<!-- Hidden stubs required by renderResult() / updateLiveBar() in app.js -->
+<div id="step6" style="display:none"></div>
+<div id="liveVerdict" style="display:none"></div>
 
 <!-- ══ STICKY BOTTOM BAR ══ -->
 <div class="op-sticky">
@@ -683,9 +690,9 @@ function opRenderResult() {
   renderResult(results, totalNetto, totalInvest, totalDB, totalDbQuote);
 
   // Show result section and scroll to it
-  const resultEl = document.getElementById('opResult');
-  resultEl.classList.add('visible');
-  setTimeout(() => resultEl.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+  const resultWrapper = document.getElementById('opResultWrapper');
+  resultWrapper.style.display = 'block';
+  setTimeout(() => resultWrapper.scrollIntoView({behavior:'smooth', block:'start'}), 50);
 }
 
 function opUpdateSticky(netto, invest, db, dbq) {
@@ -756,11 +763,28 @@ const __origRender = window.renderResult;
 </body>
 </html>
 <script>
-// Patch renderResult: suppress step6 show, use opResult instead
+// Override exportPDF: print only #resultContent
+window.exportPDF = function() {
+  const slug = s => (s||'').trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-äöüß]/g,'').replace(/--+/g,'-');
+  const verein = slug(state.vereinName) || 'verein';
+  const verdict = (window._lastTotals && window._lastTotals.db >= 0) ? 'good' : 'bad';
+  const prev = document.title;
+  document.title = `uhlsport-ausruestungsvertrag_${verein}_${verdict}`;
+  document.body.classList.add('printing-result');
+  window.print();
+  document.body.classList.remove('printing-result');
+  document.title = prev;
+};
+
+// Patch renderResult: suppress step6 show + scroll-to-top, use opResult instead
 (function(){
   const _orig = renderResult;
   window.renderResult = function(results, tN, tI, tD, tQ) {
+    // Suppress the scroll-to-top that renderResult fires (we handle scrolling ourselves)
+    const _scrollTo = window.scrollTo.bind(window);
+    window.scrollTo = () => {};
     _orig(results, tN, tI, tD, tQ);
+    window.scrollTo = _scrollTo;
     // Hide step6, it's not used in one-page mode
     document.getElementById('step6').style.display = 'none';
   };

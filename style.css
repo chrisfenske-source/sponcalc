@@ -573,6 +573,18 @@ select option { background: var(--white); }
   .site-header { border-bottom: 1px solid #000; margin-bottom: 20px; }
   .result-verdict { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .kpi-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* One-page mode: show only the result content */
+  body.printing-result * { visibility: hidden; }
+  body.printing-result #resultContent,
+  body.printing-result #resultContent * { visibility: visible; }
+  body.printing-result #resultContent {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 24px; background: #fff;
+  }
+  body.printing-result .result-verdict,
+  body.printing-result .kpi-strip,
+  body.printing-result .section-head-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* ── RESPONSIVE ── */
