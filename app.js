@@ -236,152 +236,51 @@ function collectSponsoringFromDOM(){
 }
 
 // ── UMSATZ UI ──
+// ── UMSATZ UI ──
 function buildUmsatzUI(){
-  const tabs=document.getElementById('umsatzYearTabsContainer'),panels=document.getElementById('umsatzYearPanelsContainer');
-  tabs.innerHTML='';panels.innerHTML='';
-  state.years.forEach((yr,i)=>{
-    const t=document.createElement('button');
-    t.className='year-tab'+(i===0?' active':'');t.textContent=yr.label;t.onclick=()=>switchTab('um',i);tabs.appendChild(t);
-    const p=document.createElement('div');
-    p.className='year-panel'+(i===0?' visible':'');p.id=`um_panel_${i}`;
-    p.innerHTML=buildUmsatzPanel(i,yr);panels.appendChild(p);
+  const container=document.getElementById('umsatzYearAccordionsContainer');
+  if(!container) return;
+  container.innerHTML='';
+  const chev=`<svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>`;
+  const cats=[
+    {key:'verein',    num:'01', title:'Verein — Direkter Nachkauf',      desc:'Direkter Nachkauf des Vereins',        build:buildUmsatzVereinPanel},
+    {key:'hdirekt',   num:'02', title:'Fachhändler — Direktumsatz',      desc:'Direktumsatz & Freiware',              build:buildUmsatzHdirektPanel},
+    {key:'hindirekt', num:'03', title:'Fachhändler — Indirekter Umsatz', desc:'Indirekter Händlerumsatz',             build:buildUmsatzHindirektPanel},
+    {key:'sonstige',  num:'04', title:'Sonstige Kosten',                  desc:'Marketing, Logistik & weitere Kosten', build:buildUmsatzSonstigePanel},
+  ];
+  cats.forEach(cat=>{
+    const tabs=state.years.map((yr,i)=>`<button class="year-tab${i===0?' active':''}" onclick="switchUmsatzTab('${cat.key}',${i})">${yr.label}</button>`).join('');
+    const panels=state.years.map((yr,i)=>`<div class="year-panel${i===0?' visible':''}" id="umsatz_${cat.key}_panel_${i}">${cat.build(i,yr)}</div>`).join('');
+    const sec=document.createElement('div');
+    sec.className='op-section collapsed';
+    sec.id=`umsatz_cat_${cat.key}`;
+    sec.innerHTML=`
+      <div class="op-section-header" onclick="toggleUmsatzCat('${cat.key}')">
+        <div class="op-section-num">${cat.num}</div>
+        <div class="op-section-title">${cat.title}</div>
+        <div class="op-section-desc">${cat.desc}</div>
+        ${chev}
+      </div>
+      <div class="op-section-body" id="umsatz_cat_body_${cat.key}" style="max-height:0;padding-top:0;padding-bottom:0">
+        <div class="year-tabs" id="umsatz_tabs_${cat.key}">${tabs}</div>
+        <div id="umsatz_panels_${cat.key}">${panels}</div>
+      </div>`;
+    container.appendChild(sec);
   });
-  // Trigger initial preview calculations for all years
   setTimeout(()=>state.years.forEach((_,i)=>updateUmsatzPreview(i)),0);
 }
 
-function buildUmsatzPanel(i,yr){
-  const chev=`<svg class="um-sub-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>`;
-  return`
-  <div class="um-sub collapsed" id="um_sub_verein_${i}" style="margin-top:16px">
-    <div class="um-sub-header" onclick="toggleUmsatzSub('verein',${i})">
-      <span class="um-sub-title">Verein — Direkter Nachkauf</span>${chev}
-    </div>
-    <div class="um-sub-body" id="um_sub_verein_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div class="field-grid">
-        <div class="field-group span-2">
-          <div class="field-label">Bewertung Vereinsumsatz <span class="tip">i<span class="tip-box">Bestellt der Verein direkt bei uhlsport? Zu HEK oder UVP? Bitte nur eine Option wählen.</span></span></div>
-          <div class="mode-toggle" id="um_verein_toggle_${i}">
-            <button class="${yr.vereinUmsatzMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'verein','hek')">Zu HEK</button>
-            <button class="${yr.vereinUmsatzMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'verein','uvp')">Zu UVP</button>
-          </div>
-        </div>
-        <div class="field-group" id="um_vereinHek_group_${i}" style="${yr.vereinUmsatzMode!=='hek'?'display:none':''}">
-          <div class="field-label">Umsatz Verein zu HEK (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum HEK. Davon werden Vereins-Rabatt, Erlösschmälerungen und Wareneinsatz abgezogen.</span></span></div>
-          <input type="number" id="um_vereinHek_${i}" value="${yr.vereinUmsatzHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-        <div class="field-group" id="um_vereinUvp_group_${i}" style="${yr.vereinUmsatzMode!=='uvp'?'display:none':''}">
-          <div class="field-label">Umsatz Verein zu UVP (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum UVP. Wird intern in HEK umgerechnet.</span></span></div>
-          <input type="number" id="um_vereinUvp_${i}" value="${yr.vereinUmsatzUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-      </div>
-      <div class="calc-preview" id="prev_verein_${i}">
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_verein_rabatt_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_verein_erloess_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_verein_netto_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_verein_cos_${i}">–</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="um-sub collapsed" id="um_sub_hdirekt_${i}">
-    <div class="um-sub-header" onclick="toggleUmsatzSub('hdirekt',${i})">
-      <span class="um-sub-title">Fachhändler — Direktumsatz</span>${chev}
-    </div>
-    <div class="um-sub-body" id="um_sub_hdirekt_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div class="field-grid">
-        <div class="field-group span-2">
-          <div class="field-label">Bewertung Händler-Direktumsatz <span class="tip">i<span class="tip-box">Direktumsätze des Fachhändlers mit dem Verein – entweder zu HEK oder UVP, nie beides.</span></span></div>
-          <div class="mode-toggle" id="um_hdirekt_toggle_${i}">
-            <button class="${yr.haendlerDirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','hek')">Zu HEK</button>
-            <button class="${yr.haendlerDirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','uvp')">Zu UVP</button>
-          </div>
-        </div>
-        <div class="field-group" id="um_hdirektHek_group_${i}" style="${yr.haendlerDirektMode!=='hek'?'display:none':''}">
-          <div class="field-label">Händler-Direkt zu HEK (€) <span class="tip">i<span class="tip-box">Umsatz des Fachhändlers mit dem Verein zu HEK. Abzüge: Nachkauf-Rabatt und Erlösschmälerungen.</span></span></div>
-          <input type="number" id="um_hdirektHek_${i}" value="${yr.haendlerDirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-        <div class="field-group" id="um_hdirektUvp_group_${i}" style="${yr.haendlerDirektMode!=='uvp'?'display:none':''}">
-          <div class="field-label">Händler-Direkt zu UVP (€)</div>
-          <input type="number" id="um_hdirektUvp_${i}" value="${yr.haendlerDirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-        <div class="field-group">
-          <div class="field-label">Freiware Händler → Verein (HEK, €) <span class="tip">i<span class="tip-box">Ware, die der Händler aus seinem Freiwarenkontingent kostenlos an den Verein weitergibt. Bewertet zu HEK.</span></span></div>
-          <input type="number" id="um_haendlerFreiwareHek_${i}" value="${yr.haendlerFreiwareHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-      </div>
-      <div class="calc-preview" id="prev_hdirekt_${i}">
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hd_rabatt_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hd_erloess_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hd_netto_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hd_cos_${i}">–</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="um-sub collapsed" id="um_sub_hindirekt_${i}">
-    <div class="um-sub-header" onclick="toggleUmsatzSub('hindirekt',${i})">
-      <span class="um-sub-title">Fachhändler — Indirekter Umsatz</span>${chev}
-    </div>
-    <div class="um-sub-body" id="um_sub_hindirekt_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div class="field-grid">
-        <div class="field-group span-2">
-          <div class="field-label">Bewertung indirekter Händlerumsatz <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
-          <div class="mode-toggle" id="um_hindirekt_toggle_${i}">
-            <button class="${yr.haendlerIndirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','hek')">Zu HEK</button>
-            <button class="${yr.haendlerIndirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','uvp')">Zu UVP</button>
-          </div>
-        </div>
-        <div class="field-group" id="um_hindirektHek_group_${i}" style="${yr.haendlerIndirektMode!=='hek'?'display:none':''}">
-          <div class="field-label">Indirekter Umsatz zu HEK (€)</div>
-          <input type="number" id="um_hindirektHek_${i}" value="${yr.haendlerIndirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-        <div class="field-group" id="um_hindirektUvp_group_${i}" style="${yr.haendlerIndirektMode!=='uvp'?'display:none':''}">
-          <div class="field-label">Indirekter Umsatz zu UVP (€)</div>
-          <input type="number" id="um_hindirektUvp_${i}" value="${yr.haendlerIndirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-        </div>
-      </div>
-      <div class="calc-preview" id="prev_hindirekt_${i}">
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hi_rabatt_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hi_erloess_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hi_netto_${i}">–</div></div>
-        <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hi_cos_${i}">–</div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="um-sub collapsed" id="um_sub_sonstige_${i}">
-    <div class="um-sub-header" onclick="toggleUmsatzSub('sonstige',${i})">
-      <span class="um-sub-title">Sonstige Kosten</span>${chev}
-    </div>
-    <div class="um-sub-body" id="um_sub_sonstige_body_${i}" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div class="field-grid cols-3">
-        <div class="field-group">
-          <div class="field-label">Marketingkosten (€) <span class="tip">i<span class="tip-box">Kosten für Marketing-Maßnahmen rund um den Vertrag.</span></span></div>
-          <input type="number" id="um_marketing_${i}" value="${yr.marketingkosten}" min="0" placeholder="0">
-        </div>
-        <div class="field-group">
-          <div class="field-label">Logistikkosten (€) <span class="tip">i<span class="tip-box">Versand-, Lager- und Logistikkosten für diesen Deal.</span></span></div>
-          <input type="number" id="um_logistik_${i}" value="${yr.logistikkosten}" min="0" placeholder="0">
-        </div>
-        <div class="field-group">
-          <div class="field-label">Sonstige Kosten (€) <span class="tip">i<span class="tip-box">Alle weiteren Kosten, die nicht in die anderen Kategorien passen.</span></span></div>
-          <input type="number" id="um_sonstige_${i}" value="${yr.sonstigeKosten}" min="0" placeholder="0">
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function toggleUmsatzSub(key,i){
-  const sub=document.getElementById(`um_sub_${key}_${i}`);
-  const body=document.getElementById(`um_sub_${key}_body_${i}`);
-  const isCollapsed=sub.classList.contains('collapsed');
+function toggleUmsatzCat(cat){
+  const sec=document.getElementById('umsatz_cat_'+cat);
+  const body=document.getElementById('umsatz_cat_body_'+cat);
+  const isCollapsed=sec.classList.contains('collapsed');
   if(isCollapsed){
-    sub.classList.remove('collapsed');
+    sec.classList.remove('collapsed');
+    body.style.paddingTop='';
+    body.style.paddingBottom='';
     body.style.maxHeight=body.scrollHeight+'px';
     const onEnd=()=>{
-      if(!sub.classList.contains('collapsed')) body.style.maxHeight='none';
+      if(!sec.classList.contains('collapsed')) body.style.maxHeight='none';
       body.removeEventListener('transitionend',onEnd);
     };
     body.addEventListener('transitionend',onEnd);
@@ -389,15 +288,119 @@ function toggleUmsatzSub(key,i){
     if(body.style.maxHeight==='none'){
       body.style.maxHeight=body.scrollHeight+'px';
       requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        sub.classList.add('collapsed');
+        sec.classList.add('collapsed');
         body.style.maxHeight='0';
       }));
     } else {
-      sub.classList.add('collapsed');
+      sec.classList.add('collapsed');
       body.style.maxHeight='0';
     }
   }
 }
+
+function switchUmsatzTab(cat,idx){
+  document.querySelectorAll('#umsatz_tabs_'+cat+' .year-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  document.querySelectorAll('#umsatz_panels_'+cat+' .year-panel').forEach((p,i)=>p.classList.toggle('visible',i===idx));
+}
+
+function buildUmsatzVereinPanel(i,yr){
+  return`
+  <div class="field-grid">
+    <div class="field-group span-2">
+      <div class="field-label">Bewertung Vereinsumsatz <span class="tip">i<span class="tip-box">Bestellt der Verein direkt bei uhlsport? Zu HEK oder UVP? Bitte nur eine Option wählen.</span></span></div>
+      <div class="mode-toggle" id="um_verein_toggle_${i}">
+        <button class="${yr.vereinUmsatzMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'verein','hek')">Zu HEK</button>
+        <button class="${yr.vereinUmsatzMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'verein','uvp')">Zu UVP</button>
+      </div>
+    </div>
+    <div class="field-group" id="um_vereinHek_group_${i}" style="${yr.vereinUmsatzMode!=='hek'?'display:none':''}">
+      <div class="field-label">Umsatz Verein zu HEK (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum HEK. Davon werden Vereins-Rabatt, Erlösschmälerungen und Wareneinsatz abgezogen.</span></span></div>
+      <input type="number" id="um_vereinHek_${i}" value="${yr.vereinUmsatzHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+    <div class="field-group" id="um_vereinUvp_group_${i}" style="${yr.vereinUmsatzMode!=='uvp'?'display:none':''}">
+      <div class="field-label">Umsatz Verein zu UVP (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum UVP. Wird intern in HEK umgerechnet.</span></span></div>
+      <input type="number" id="um_vereinUvp_${i}" value="${yr.vereinUmsatzUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+  </div>
+  <div class="calc-preview" id="prev_verein_${i}">
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_verein_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_verein_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_verein_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_verein_cos_${i}">–</div></div>
+  </div>`;}
+
+function buildUmsatzHdirektPanel(i,yr){
+  return`
+  <div class="field-grid">
+    <div class="field-group span-2">
+      <div class="field-label">Bewertung Händler-Direktumsatz <span class="tip">i<span class="tip-box">Direktumsätze des Fachhändlers mit dem Verein – entweder zu HEK oder UVP, nie beides.</span></span></div>
+      <div class="mode-toggle" id="um_hdirekt_toggle_${i}">
+        <button class="${yr.haendlerDirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','hek')">Zu HEK</button>
+        <button class="${yr.haendlerDirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','uvp')">Zu UVP</button>
+      </div>
+    </div>
+    <div class="field-group" id="um_hdirektHek_group_${i}" style="${yr.haendlerDirektMode!=='hek'?'display:none':''}">
+      <div class="field-label">Händler-Direkt zu HEK (€) <span class="tip">i<span class="tip-box">Umsatz des Fachhändlers mit dem Verein zu HEK. Abzüge: Nachkauf-Rabatt und Erlösschmälerungen.</span></span></div>
+      <input type="number" id="um_hdirektHek_${i}" value="${yr.haendlerDirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+    <div class="field-group" id="um_hdirektUvp_group_${i}" style="${yr.haendlerDirektMode!=='uvp'?'display:none':''}">
+      <div class="field-label">Händler-Direkt zu UVP (€)</div>
+      <input type="number" id="um_hdirektUvp_${i}" value="${yr.haendlerDirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Freiware Händler → Verein (HEK, €) <span class="tip">i<span class="tip-box">Ware, die der Händler aus seinem Freiwarenkontingent kostenlos an den Verein weitergibt. Bewertet zu HEK.</span></span></div>
+      <input type="number" id="um_haendlerFreiwareHek_${i}" value="${yr.haendlerFreiwareHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+  </div>
+  <div class="calc-preview" id="prev_hdirekt_${i}">
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hd_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hd_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hd_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hd_cos_${i}">–</div></div>
+  </div>`;}
+
+function buildUmsatzHindirektPanel(i,yr){
+  return`
+  <div class="field-grid">
+    <div class="field-group span-2">
+      <div class="field-label">Bewertung indirekter Händlerumsatz <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
+      <div class="mode-toggle" id="um_hindirekt_toggle_${i}">
+        <button class="${yr.haendlerIndirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','hek')">Zu HEK</button>
+        <button class="${yr.haendlerIndirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','uvp')">Zu UVP</button>
+      </div>
+    </div>
+    <div class="field-group" id="um_hindirektHek_group_${i}" style="${yr.haendlerIndirektMode!=='hek'?'display:none':''}">
+      <div class="field-label">Indirekter Umsatz zu HEK (€)</div>
+      <input type="number" id="um_hindirektHek_${i}" value="${yr.haendlerIndirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+    <div class="field-group" id="um_hindirektUvp_group_${i}" style="${yr.haendlerIndirektMode!=='uvp'?'display:none':''}">
+      <div class="field-label">Indirekter Umsatz zu UVP (€)</div>
+      <input type="number" id="um_hindirektUvp_${i}" value="${yr.haendlerIndirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    </div>
+  </div>
+  <div class="calc-preview" id="prev_hindirekt_${i}">
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hi_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hi_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hi_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hi_cos_${i}">–</div></div>
+  </div>`;}
+
+function buildUmsatzSonstigePanel(i,yr){
+  return`
+  <div class="field-grid cols-3">
+    <div class="field-group">
+      <div class="field-label">Marketingkosten (€) <span class="tip">i<span class="tip-box">Kosten für Marketing-Maßnahmen rund um den Vertrag.</span></span></div>
+      <input type="number" id="um_marketing_${i}" value="${yr.marketingkosten}" min="0" placeholder="0">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Logistikkosten (€) <span class="tip">i<span class="tip-box">Versand-, Lager- und Logistikkosten für diesen Deal.</span></span></div>
+      <input type="number" id="um_logistik_${i}" value="${yr.logistikkosten}" min="0" placeholder="0">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Sonstige Kosten (€) <span class="tip">i<span class="tip-box">Alle weiteren Kosten, die nicht in die anderen Kategorien passen.</span></span></div>
+      <input type="number" id="um_sonstige_${i}" value="${yr.sonstigeKosten}" min="0" placeholder="0">
+    </div>
+  </div>`;}
 
 function setUmsatzMode(i,type,mode){
   const map={verein:['vereinUmsatzMode','vereinHek','vereinUvp'],hdirekt:['haendlerDirektMode','hdirektHek','hdirektUvp'],hindirekt:['haendlerIndirektMode','hindirektHek','hindirektUvp']};

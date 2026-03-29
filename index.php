@@ -64,48 +64,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>uhlsport — Kalkulation Ausrüstungsverträge</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
-/* ── ONE-PAGE OVERRIDES ── */
+/* ── ONE-PAGE LAYOUT ── */
 
-/* All sections always visible, stacked with gap */
 .op-section {
-  border: 1.5px solid var(--border);
-  margin-bottom: 24px;
-  background: var(--white);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 10px;
+  overflow: hidden;
 }
 .op-section-header {
-  display: flex; align-items: center; gap: 16px;
-  padding: 18px 24px;
-  border-bottom: 1.5px solid var(--border);
-  background: var(--gray-50);
+  display: flex; align-items: center; gap: 14px;
+  padding: 15px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
   cursor: pointer; user-select: none;
+  transition: background 0.15s;
 }
-.op-section-header:hover { background: var(--gray-100); }
+.op-section:not(.collapsed) .op-section-header { border-bottom-color: var(--border); }
+.op-section-header:hover { background: var(--slate-50); }
 .op-section-num {
   font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-  color: var(--white); background: var(--black);
-  width: 28px; height: 28px; border-radius: 50%;
+  color: var(--white); background: var(--primary);
+  width: 26px; height: 26px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; letter-spacing: 0;
+  transition: box-shadow 0.2s;
+}
+.op-section:not(.collapsed) .op-section-num {
+  box-shadow: 0 0 0 3px var(--primary-ring);
 }
 .op-section-title {
-  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px; color: var(--black);
+  font-family: var(--font-body); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text);
   flex: 1;
 }
 .op-section-desc {
-  font-size: 12px; color: var(--gray-400); max-width: 400px;
+  font-size: 12px; color: var(--text-muted); max-width: 400px;
   text-align: right; line-height: 1.4;
 }
 .op-section-chevron {
-  flex-shrink: 0; transition: transform 0.2s;
-  color: var(--gray-400);
+  flex-shrink: 0; transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  color: var(--text-muted);
 }
 .op-section.collapsed .op-section-chevron { transform: rotate(-90deg); }
 .op-section-body {
-  padding: 24px;
+  padding: 22px 20px 48px;
   overflow: hidden;
   transition: max-height 0.3s ease, padding 0.3s ease;
 }
@@ -114,111 +122,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   padding-top: 0; padding-bottom: 0;
 }
 
-/* Sub-accordions inside Umsatz panels */
+/* Sub-accordions */
 .um-sub {
-  border: 1px solid var(--border);
-  margin-bottom: 12px;
+  border: 1px solid var(--border); border-radius: var(--radius-md);
+  margin-bottom: 10px; overflow: hidden;
 }
 .um-sub:last-child { margin-bottom: 0; }
 .um-sub-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 16px;
-  background: var(--gray-50);
+  padding: 11px 16px; background: var(--slate-50);
   cursor: pointer; user-select: none;
   border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
 }
 .um-sub.collapsed .um-sub-header { border-bottom: none; }
-.um-sub-header:hover { background: var(--gray-100); }
+.um-sub-header:hover { background: var(--slate-100); }
 .um-sub-title {
   font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.5px; color: var(--black);
+  text-transform: uppercase; letter-spacing: 0.5px; color: var(--text);
 }
-.um-sub-chevron {
-  flex-shrink: 0; transition: transform 0.2s; color: var(--gray-400);
-}
+.um-sub-chevron { flex-shrink: 0; transition: transform 0.2s; color: var(--text-muted); }
 .um-sub.collapsed .um-sub-chevron { transform: rotate(-90deg); }
 .um-sub-body {
-  overflow: hidden;
-  transition: max-height 0.25s ease, padding 0.25s ease;
-  padding: 16px;
+  overflow: hidden; transition: max-height 0.25s ease, padding 0.25s ease; padding: 16px 16px 40px;
 }
 .um-sub.collapsed .um-sub-body {
-  max-height: 0 !important;
-  padding-top: 0 !important; padding-bottom: 0 !important;
+  max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important;
 }
 
-/* Result section */
+/* Ergebnis-Bereich */
 .op-result {
-  border: 1.5px solid var(--border);
-  margin-bottom: 100px;
-  display: none;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+  margin-bottom: 100px; overflow: hidden; display: none;
 }
-.op-result.visible { display: block; }
+.op-result.visible { display: block; animation: appear 0.3s ease; }
 .op-result-header {
-  padding: 18px 24px;
-  border-bottom: 1.5px solid var(--border);
-  background: var(--gray-50);
-  display: flex; align-items: center; gap: 12px;
+  padding: 15px 20px; border-bottom: 1px solid var(--border);
+  background: var(--slate-50);
+  display: flex; align-items: center; gap: 10px;
 }
 .op-result-header-title {
-  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px; color: var(--black);
+  font-family: var(--font-body); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text);
 }
 .op-result-body { padding: 0; }
 
-/* Sticky bottom bar with calculate button */
+/* Sticky bottom bar */
 .op-sticky {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 299;
-  background: var(--white); border-top: 2px solid var(--black);
+  background: var(--surface); border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 20px rgba(15,23,42,0.09);
   padding: 12px 24px;
   display: flex; align-items: center; justify-content: center; gap: 16px;
 }
 .op-sticky-inner {
-  max-width: 900px; width: 100%;
+  max-width: 960px; width: 100%;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-.op-sticky-preview {
-  display: flex; gap: 24px; align-items: center;
+.op-sticky-preview { display: flex; align-items: center; }
+.op-sticky-pill {
+  display: flex; flex-direction: column;
+  padding: 0 20px; border-right: 1px solid var(--border);
 }
-.op-sticky-pill { display: flex; flex-direction: column; }
+.op-sticky-pill:first-child { padding-left: 0; }
+.op-sticky-pill:last-child { border-right: none; }
 .op-sticky-lbl {
   font-family: var(--font-mono); font-size: 9px; font-weight: 500;
-  text-transform: uppercase; letter-spacing: 1px; color: var(--gray-400);
+  text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 1px;
 }
 .op-sticky-val {
-  font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--black);
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text);
 }
 .op-sticky-val.pos { color: var(--green); }
 .op-sticky-val.neg { color: var(--red); }
 .op-calc-btn {
   display: flex; align-items: center; gap: 8px;
-  height: 44px; padding: 0 32px;
-  background: var(--black); border: none; color: var(--white);
+  height: 44px; padding: 0 28px;
+  background: var(--primary); border: none; color: var(--white);
+  border-radius: var(--radius-md);
   font-family: var(--font-mono); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
-  transition: background 0.15s; flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s; flex-shrink: 0;
 }
-.op-calc-btn:hover { background: var(--gray-600); }
+.op-calc-btn:hover { background: var(--primary-hover); box-shadow: 0 4px 14px var(--primary-ring); }
 .op-action-btns { display: flex; gap: 8px; }
 
-/* Remove wizard chrome */
+/* Hide wizard chrome */
 .stepper, .btn-row, .card-eyebrow { display: none !important; }
-.card, .result-card { display: none !important; } /* hide wizard cards */
+.card, .result-card { display: none !important; }
 
-/* Adjust padding for sticky bar */
 .app-wrap { padding-bottom: 80px; }
-
-/* section-head margin adjustment inside one-page */
 .op-section-body .section-head:first-child { margin-top: 0; }
-
-/* year tabs get less top margin */
 .op-section-body .year-tabs { margin-top: 0; }
+
+/* Umsatzplanung group headline */
+#umsatzSection { margin-bottom: 0; }
+.umsatz-group-headline {
+  display: flex; align-items: center; gap: 14px;
+  padding: 8px 0 12px;
+}
+.umsatz-group-title {
+  font-family: var(--font-body); font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text);
+}
+.umsatz-group-desc {
+  font-size: 12px; color: var(--text-muted); line-height: 1.4;
+}
+#umsatzYearAccordionsContainer .op-section { margin-bottom: 10px; }
 
 @media (max-width: 640px) {
   .op-section-desc { display: none; }
-  .op-sticky-preview { gap: 12px; }
+  .op-sticky-pill { padding: 0 12px; }
   .op-sticky-val { font-size: 12px; }
-  .op-calc-btn { padding: 0 20px; }
+  .op-calc-btn { padding: 0 18px; font-size: 10px; }
 }
 </style>
 </head>
@@ -413,18 +430,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 
-  <!-- ══ SECTION 5: UMSÄTZE ══ -->
-  <div class="op-section collapsed" id="sec5">
-    <div class="op-section-header" onclick="toggleSection(5)">
-      <div class="op-section-num">05</div>
-      <div class="op-section-title">Umsatzplanung</div>
-      <div class="op-section-desc">Verein direkt, Händler direkt & indirekt</div>
-      <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
+  <!-- ══ UMSATZPLANUNG ══ -->
+  <div id="umsatzSection">
+    <div class="umsatz-group-headline">
+      <div class="op-section-num" style="background:var(--primary);color:var(--white)">05</div>
+      <span class="umsatz-group-title">Umsatzplanung</span>
+      <span class="umsatz-group-desc">Verein direkt, Händler direkt & indirekt</span>
     </div>
-    <div class="op-section-body" id="sec5-body" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div id="umsatzYearTabsContainer" class="year-tabs"></div>
-      <div id="umsatzYearPanelsContainer"></div>
-    </div>
+    <div id="umsatzYearAccordionsContainer"></div>
   </div>
 
   <!-- ══ ERGEBNIS ══ -->
@@ -518,6 +531,8 @@ function toggleSection(n) {
   const isCollapsed = sec.classList.contains('collapsed');
   if (isCollapsed) {
     sec.classList.remove('collapsed');
+    body.style.paddingTop = '';
+    body.style.paddingBottom = '';
     body.style.maxHeight = body.scrollHeight + 'px';
     const onEnd = () => {
       if (!sec.classList.contains('collapsed')) body.style.maxHeight = 'none';
@@ -558,14 +573,12 @@ function onLaufzeitChange() {
   initYears(n);
   buildSponsoringUI();
   buildUmsatzUI();
-  // Re-measure open sections
-  [4,5].forEach(i => {
-    const sec = document.getElementById('sec'+i);
-    const body = document.getElementById('sec'+i+'-body');
-    if (!sec.classList.contains('collapsed')) {
-      body.style.maxHeight = body.scrollHeight + 'px';
-    }
-  });
+  // Re-measure open section 4 (Sponsoring)
+  const sec4 = document.getElementById('sec4');
+  const body4 = document.getElementById('sec4-body');
+  if (sec4 && !sec4.classList.contains('collapsed')) {
+    body4.style.maxHeight = body4.scrollHeight + 'px';
+  }
 }
 
 // Collect all data from DOM at once (no step concept)
