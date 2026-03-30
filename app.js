@@ -327,6 +327,7 @@ function buildUmsatzVereinPanel(i,yr){
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_verein_erloess_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_verein_netto_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_verein_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_verein_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzHdirektPanel(i,yr){
@@ -357,6 +358,7 @@ function buildUmsatzHdirektPanel(i,yr){
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hd_erloess_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hd_netto_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hd_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_hd_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzHindirektPanel(i,yr){
@@ -383,6 +385,7 @@ function buildUmsatzHindirektPanel(i,yr){
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hi_erloess_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hi_netto_${i}">–</div></div>
     <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hi_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_hi_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzSonstigePanel(i,yr){
@@ -404,8 +407,13 @@ function buildUmsatzSonstigePanel(i,yr){
 
 function setUmsatzMode(i,type,mode){
   const map={verein:['vereinUmsatzMode','vereinHek','vereinUvp'],hdirekt:['haendlerDirektMode','hdirektHek','hdirektUvp'],hindirekt:['haendlerIndirektMode','hindirektHek','hindirektUvp']};
+  const stateValueMap={verein:{hek:'vereinUmsatzUvp',uvp:'vereinUmsatzHek'},hdirekt:{hek:'haendlerDirektUvp',uvp:'haendlerDirektHek'},hindirekt:{hek:'haendlerIndirektUvp',uvp:'haendlerIndirektHek'}};
   const[stateKey,hekKey,uvpKey]=map[type];
   state.years[i][stateKey]=mode;
+  // Clear the opposite input to prevent stale values affecting calculations
+  const clearInputKey=mode==='hek'?uvpKey:hekKey;
+  const clearEl=document.getElementById(`um_${clearInputKey}_${i}`);
+  if(clearEl){clearEl.value='';state.years[i][stateValueMap[type][mode]]=0;}
   document.getElementById(`um_${hekKey}_group_${i}`).style.display=mode==='hek'?'':'none';
   document.getElementById(`um_${uvpKey}_group_${i}`).style.display=mode==='uvp'?'':'none';
   document.getElementById(`um_${type}_toggle_${i}`).querySelectorAll('button').forEach((b,bi)=>b.classList.toggle('on',(bi===0&&mode==='hek')||(bi===1&&mode==='uvp')));
@@ -430,40 +438,52 @@ function updateUmsatzPreview(i){
     const vE = parseFloat(normNum(document.getElementById('vereinErloesschmaelerung')?.value)) || state.vereinErloesschmaelerung;
     const hN = parseFloat(normNum(document.getElementById('haendlerNachkauf')?.value)) || state.haendlerNachkauf;
     const hE = parseFloat(normNum(document.getElementById('haendlerErloesschmaelerung')?.value)) || state.haendlerErloesschmaelerung;
+    const hFR = parseFloat(normNum(document.getElementById('haendlerFreiware')?.value)) || state.haendlerFreiware;
     const yr = state.years[i] || {};
     const fmtP = n => n===0?'–':new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+    const setV = (id,val,pos) => {
+      const el=document.getElementById(id); if(!el) return;
+      el.textContent=fmtP(val);
+      if(pos!==undefined){ el.className='calc-preview-val'+(val>0&&pos?' pos':val<0?' neg':''); }
+    };
 
     // Verein
     const vMode = yr.vereinUmsatzMode||'hek';
     const vH = pfId(`um_vereinHek_${i}`)||0, vU = pfId(`um_vereinUvp_${i}`)||0;
     const vB = vMode==='hek'?vH:vU*hekUvpR;
     const vRab = vB*vN, vErl = (vB-vRab)*vE, vNetto = vB-vRab-vErl, vCos = vB*cosR;
-    const setV = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=fmtP(val); };
+    const vDB = vNetto-vCos;
     setV(`prev_verein_rabatt_${i}`, vB>0?-vRab:0);
     setV(`prev_verein_erloess_${i}`, vB>0?-vErl:0);
     setV(`prev_verein_netto_${i}`, vNetto);
     setV(`prev_verein_cos_${i}`, vB>0?-vCos:0);
+    setV(`prev_verein_db_${i}`, vB>0?vDB:0, true);
 
-    // Händler direkt
+    // Händler direkt — Freiware ist Kostenfaktor, kein Nettoumsatz
     const hdMode = yr.haendlerDirektMode||'hek';
     const hdH = pfId(`um_hdirektHek_${i}`)||0, hdU = pfId(`um_hdirektUvp_${i}`)||0;
     const hdFw = pfId(`um_haendlerFreiwareHek_${i}`)||0;
     const hdB = hdMode==='hek'?hdH:hdU*hekUvpR;
-    const hdRab = hdB*hN, hdErl = (hdB-hdRab)*hE, hdNetto = hdB-hdRab-hdErl+hdFw, hdCos = (hdB+hdFw)*cosR;
+    const hdRab = hdB*hN, hdErl = (hdB-hdRab)*hE, hdNetto = hdB-hdRab-hdErl, hdCos = hdB*cosR;
+    const hdFwCost = hdFw*hFR;
+    const hdDB = hdNetto-hdCos-hdFwCost;
     setV(`prev_hd_rabatt_${i}`, hdB>0?-hdRab:0);
     setV(`prev_hd_erloess_${i}`, hdB>0?-hdErl:0);
     setV(`prev_hd_netto_${i}`, hdNetto);
     setV(`prev_hd_cos_${i}`, hdB>0?-hdCos:0);
+    setV(`prev_hd_db_${i}`, (hdB>0||hdFw>0)?hdDB:0, true);
 
     // Händler indirekt
     const hiMode = yr.haendlerIndirektMode||'hek';
     const hiH = pfId(`um_hindirektHek_${i}`)||0, hiU = pfId(`um_hindirektUvp_${i}`)||0;
     const hiB = hiMode==='hek'?hiH:hiU*hekUvpR;
     const hiRab = hiB*hN, hiErl = (hiB-hiRab)*hE, hiNetto = hiB-hiRab-hiErl, hiCos = hiB*cosR;
+    const hiDB = hiNetto-hiCos;
     setV(`prev_hi_rabatt_${i}`, hiB>0?-hiRab:0);
     setV(`prev_hi_erloess_${i}`, hiB>0?-hiErl:0);
     setV(`prev_hi_netto_${i}`, hiNetto);
     setV(`prev_hi_cos_${i}`, hiB>0?-hiCos:0);
+    setV(`prev_hi_db_${i}`, hiB>0?hiDB:0, true);
   }catch(e){}
 }
 
@@ -494,11 +514,12 @@ function berechnen(){
 
     let hdHekBrutto=yr.haendlerDirektMode==='hek'?yr.haendlerDirektHek:yr.haendlerDirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
     const hdFw=yr.haendlerFreiwareHek;
+    const hdFwCost=hdFw*s.haendlerFreiware;
     const hdRabatt=hdHekBrutto*s.haendlerNachkauf;
     const hdErloess=(hdHekBrutto-hdRabatt)*s.haendlerErloesschmaelerung;
-    const hdNetto=hdHekBrutto-hdRabatt-hdErloess+hdFw;
-    const hdCos=(hdHekBrutto+hdFw)*cosHekRatio;
-    const hdDB1=hdNetto-hdCos;
+    const hdNetto=hdHekBrutto-hdRabatt-hdErloess;
+    const hdCos=hdHekBrutto*cosHekRatio;
+    const hdDB1=hdNetto-hdCos-hdFwCost;
 
     let hiHekBrutto=yr.haendlerIndirektMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
     const hiRabatt=hiHekBrutto*s.haendlerNachkauf;
@@ -766,6 +787,7 @@ function liveEstimate(){
     const cosR=1/hek;
     const hN=parseFloat(document.getElementById('haendlerNachkauf')?.value||state.haendlerNachkauf);
     const hE=parseFloat(document.getElementById('haendlerErloesschmaelerung')?.value||state.haendlerErloesschmaelerung);
+    const hFR=parseFloat(document.getElementById('haendlerFreiware')?.value||state.haendlerFreiware);
     const vN=parseFloat(document.getElementById('vereinNachkauf')?.value||state.vereinNachkauf);
     const vE=parseFloat(document.getElementById('vereinErloesschmaelerung')?.value||state.vereinErloesschmaelerung);
     let tN=0,tI=0,tD=0;
@@ -787,7 +809,7 @@ function liveEstimate(){
       const hdU=(pfId(`um_hdirektUvp_${i}`)||yr.haendlerDirektUvp||0);
       const hdFw=(pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0);
       const hdB=hdMode==='hek'?hdH:hdU*(hek/uvp);
-      const hdNt=(hdB*(1-hN)*(1-hE))+hdFw;const hdD=hdNt-(hdB+hdFw)*cosR;
+      const hdNt=hdB*(1-hN)*(1-hE);const hdD=hdNt-hdB*cosR-hdFw*hFR;
       const hiMode=yr.haendlerIndirektMode||'hek';
       const hiH=(pfId(`um_hindirektHek_${i}`)||yr.haendlerIndirektHek||0);
       const hiU=(pfId(`um_hindirektUvp_${i}`)||yr.haendlerIndirektUvp||0);

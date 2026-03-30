@@ -199,14 +199,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .op-calc-btn {
   display: flex; align-items: center; gap: 8px;
   height: 44px; padding: 0 28px;
-  background: var(--primary); border: none; color: var(--white);
+  background: #f97316; border: none; color: var(--white);
   border-radius: var(--radius-md);
   font-family: var(--font-mono); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s; flex-shrink: 0;
 }
-.op-calc-btn:hover { background: var(--primary-hover); box-shadow: 0 4px 14px var(--primary-ring); }
+.op-calc-btn:hover { background: #ea6c0a; box-shadow: 0 4px 14px rgba(249,115,22,0.4); }
 .op-action-btns { display: flex; gap: 8px; }
+.op-refresh-btn {
+  display: flex; align-items: center; gap: 6px;
+  height: 44px; padding: 0 18px;
+  background: transparent; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.75);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s; flex-shrink: 0;
+}
+.op-refresh-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); color: var(--white); }
 
 /* Hide wizard chrome */
 .stepper, .btn-row, .card-eyebrow { display: none !important; }
@@ -492,6 +502,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </div>
     </div>
     <div class="op-action-btns">
+      <button class="op-refresh-btn" onclick="opRefreshLive()" title="Live-Werte neu berechnen">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Aktualisieren
+      </button>
       <button class="op-calc-btn" onclick="opBerechnen()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
         Kalkulation berechnen
@@ -657,11 +671,12 @@ function opRenderResult() {
     const vereinDB1 = vereinNetto-vereinCos;
     let hdHekBrutto = yr.haendlerDirektMode==='hek'?yr.haendlerDirektHek:yr.haendlerDirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
     const hdFw = yr.haendlerFreiwareHek;
+    const hdFwCost = hdFw*s.haendlerFreiware;
     const hdRabatt = hdHekBrutto*s.haendlerNachkauf;
     const hdErloess = (hdHekBrutto-hdRabatt)*s.haendlerErloesschmaelerung;
-    const hdNetto = hdHekBrutto-hdRabatt-hdErloess+hdFw;
-    const hdCos = (hdHekBrutto+hdFw)*cosHekRatio;
-    const hdDB1 = hdNetto-hdCos;
+    const hdNetto = hdHekBrutto-hdRabatt-hdErloess;
+    const hdCos = hdHekBrutto*cosHekRatio;
+    const hdDB1 = hdNetto-hdCos-hdFwCost;
     let hiHekBrutto = yr.haendlerIndirektMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
     const hiRabatt = hiHekBrutto*s.haendlerNachkauf;
     const hiErloess = (hiHekBrutto-hiRabatt)*s.haendlerErloesschmaelerung;
@@ -737,8 +752,9 @@ document.addEventListener('input', () => {
       const hdH=pfId(`um_hdirektHek_${i}`)||yr.haendlerDirektHek||0;
       const hdU=pfId(`um_hdirektUvp_${i}`)||yr.haendlerDirektUvp||0;
       const hdFw=pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0;
+      const hFR=parseFloat(normNum(document.getElementById('haendlerFreiware')?.value))||state.haendlerFreiware;
       const hdB=hdMode==='hek'?hdH:hdU*(hek/uvp);
-      const hdNt=(hdB*(1-hN)*(1-hE))+hdFw; const hdD=hdNt-(hdB+hdFw)*cosR;
+      const hdNt=hdB*(1-hN)*(1-hE); const hdD=hdNt-hdB*cosR-hdFw*hFR;
       const hiMode=yr.haendlerIndirektMode||'hek';
       const hiH=pfId(`um_hindirektHek_${i}`)||yr.haendlerIndirektHek||0;
       const hiU=pfId(`um_hindirektUvp_${i}`)||yr.haendlerIndirektUvp||0;
@@ -748,8 +764,15 @@ document.addEventListener('input', () => {
       tN+=vNt+hdNt+hiNt; tI+=spI+so; tD+=vD+hdD+hiD-spI-so;
     }
     opUpdateSticky(tN, tI, tD, tN>0?tD/tN:0);
+    // Refresh all umsatz previews so kondition changes are reflected immediately
+    const yn=state.years.length||3;
+    for(let j=0;j<yn;j++) updateUmsatzPreview(j);
   } catch(e){}
 });
+
+function opRefreshLive(){
+  document.dispatchEvent(new Event('input'));
+}
 
 // Override renderResult to work with op-result container
 const _origRenderResult = renderResult;

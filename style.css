@@ -453,7 +453,7 @@ select option { background: var(--white); }
 
 /* ── CALC PREVIEW STRIP ── */
 .calc-preview {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(5, 1fr);
   gap: 0; margin: 8px 0 0;
   border: 1px solid var(--border); border-radius: var(--radius-md);
   background: var(--slate-50); overflow: hidden;
