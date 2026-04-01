@@ -5,7 +5,7 @@ const state={
   haendlerNachkauf:0.3,haendlerFreiware:0.4,haendlerErloesschmaelerung:0.08,
   vereinNachkauf:0,vereinErloesschmaelerung:0,
   hekCosQuotient:2.5,uvpCosQuotient:5.0,
-  vereinMode:'hek',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
+  vereinMode:'uvp',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
   qualVerein:'',warumVerein:'',qualHandel:'',andereVereine:'',umsatzPotenziale:'',
   years:[]
 };
@@ -438,7 +438,7 @@ function updateUmsatzPreview(i){
     if(vMode==='hek'){
       vRab=vB*vN; vErl=(vB-vRab)*vE; vNetto=vB-vRab-vErl; vCos=vB/hek;
     } else {
-      const vNachRabatt=vB*(1-vN); const vNachSteuer=vNachRabatt*(1-steuer);
+      const vNachRabatt=vB*(1-vN); const vNachSteuer=vNachRabatt/(1+steuer);
       vErl=vNachSteuer*vE; vNetto=vNachSteuer*(1-vE); vRab=vB-vNachRabatt; vCos=vB/uvp;
     }
     const vDB = vNetto-vCos;
@@ -456,7 +456,7 @@ function updateUmsatzPreview(i){
     const hdB = hdMode==='hek'?hdH:hdU;
     let hdDirektNet;
     if(hdMode==='hek'){hdDirektNet=hdB*(1-hN);}
-    else{hdDirektNet=hdB*(1-hN)*(1-steuer);}
+    else{hdDirektNet=hdB*(1-hN)/(1+steuer);}
     const hdFwNet=hdFw*(1-hFR);
     const hdBasis=hdDirektNet+hdFwNet;
     const hdErl=hdBasis*hE; const hdNetto=hdBasis*(1-hE);
@@ -480,7 +480,7 @@ function updateUmsatzPreview(i){
     if(hiMode==='hek'){
       hiRab=hiB*hN; hiErl=(hiB-hiRab)*hE; hiNetto=hiB-hiRab-hiErl; hiCos=hiB/hek;
     } else {
-      const hiNachRabatt=hiB*(1-hN); const hiNachSteuer=hiNachRabatt*(1-steuer);
+      const hiNachRabatt=hiB*(1-hN); const hiNachSteuer=hiNachRabatt/(1+steuer);
       hiErl=hiNachSteuer*hE; hiNetto=hiNachSteuer*(1-hE); hiRab=hiB-hiNachRabatt; hiCos=hiB/uvp;
     }
     const hiDB=hiNetto-hiCos;
@@ -520,7 +520,7 @@ function berechnen(){
       vereinRabatt=vB*s.vereinNachkauf; vereinErloess=(vB-vereinRabatt)*s.vereinErloesschmaelerung;
       vereinNetto=vB-vereinRabatt-vereinErloess; vereinCos=vB/hek;
     } else {
-      const vNachRabatt=vB*(1-s.vereinNachkauf); const vNachSteuer=vNachRabatt*(1-steuer);
+      const vNachRabatt=vB*(1-s.vereinNachkauf); const vNachSteuer=vNachRabatt/(1+steuer);
       vereinErloess=vNachSteuer*s.vereinErloesschmaelerung; vereinNetto=vNachSteuer*(1-s.vereinErloesschmaelerung);
       vereinRabatt=vB-vNachRabatt; vereinCos=vB/uvp;
     }
@@ -531,7 +531,7 @@ function berechnen(){
     const hdFw=yr.haendlerFreiwareHek;
     let hdDirektNet;
     if(hdMode==='hek'){hdDirektNet=hdB*(1-s.haendlerNachkauf);}
-    else{hdDirektNet=hdB*(1-s.haendlerNachkauf)*(1-steuer);}
+    else{hdDirektNet=hdB*(1-s.haendlerNachkauf)/(1+steuer);}
     const hdFwNet=hdFw*(1-s.haendlerFreiware);
     const hdBasis=hdDirektNet+hdFwNet;
     const hdErloess=hdBasis*s.haendlerErloesschmaelerung; const hdNetto=hdBasis*(1-s.haendlerErloesschmaelerung);
@@ -547,7 +547,7 @@ function berechnen(){
       hiRabatt=hiB*s.haendlerNachkauf; hiErloess=(hiB-hiRabatt)*s.haendlerErloesschmaelerung;
       hiNetto=hiB-hiRabatt-hiErloess; hiCos=hiB/hek;
     } else {
-      const hiNachRabatt=hiB*(1-s.haendlerNachkauf); const hiNachSteuer=hiNachRabatt*(1-steuer);
+      const hiNachRabatt=hiB*(1-s.haendlerNachkauf); const hiNachSteuer=hiNachRabatt/(1+steuer);
       hiErloess=hiNachSteuer*s.haendlerErloesschmaelerung; hiNetto=hiNachSteuer*(1-s.haendlerErloesschmaelerung);
       hiRabatt=hiB-hiNachRabatt; hiCos=hiB/uvp;
     }
@@ -832,12 +832,12 @@ function liveEstimate(){
       const vB=vMode==='hek'?vH:vU;
       let vNt,vD;
       if(vMode==='hek'){vNt=vB*(1-vN)*(1-vE);vD=vNt-vB/hek;}
-      else{const vNR=vB*(1-vN)*(1-steuer);vNt=vNR*(1-vE);vD=vNt-vB/uvp;}
+      else{const vNR=vB*(1-vN)/(1+steuer);vNt=vNR*(1-vE);vD=vNt-vB/uvp;}
       const hdH=(pfId(`um_hdirektHek_${i}`)||(hdMode==='hek'?yr.haendlerDirektHek||0:0));
       const hdU=(pfId(`um_hdirektUvp_${i}`)||(hdMode==='uvp'?yr.haendlerDirektUvp||0:0));
       const hdFwL=(pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0);
       const hdB=hdMode==='hek'?hdH:hdU;
-      let hdDirNet; if(hdMode==='hek'){hdDirNet=hdB*(1-hN);}else{hdDirNet=hdB*(1-hN)*(1-steuer);}
+      let hdDirNet; if(hdMode==='hek'){hdDirNet=hdB*(1-hN);}else{hdDirNet=hdB*(1-hN)/(1+steuer);}
       const hdFwNet2=hdFwL*(1-hFR); const hdBasis2=hdDirNet+hdFwNet2;
       const hdNt=hdBasis2*(1-hE); let hdCos2; if(hdMode==='hek'){hdCos2=(hdB+hdFwL)/hek;}else{hdCos2=hdB/uvp+hdFwL/hek;}
       const hdD=hdNt-hdCos2;
@@ -846,7 +846,7 @@ function liveEstimate(){
       const hiB=hdMode==='hek'?hiH:hiU;
       let hiNt,hiD;
       if(hdMode==='hek'){hiNt=hiB*(1-hN)*(1-hE);hiD=hiNt-hiB/hek;}
-      else{const hiNR=hiB*(1-hN)*(1-steuer);hiNt=hiNR*(1-hE);hiD=hiNt-hiB/uvp;}
+      else{const hiNR=hiB*(1-hN)/(1+steuer);hiNt=hiNR*(1-hE);hiD=hiNt-hiB/uvp;}
       const so=(pfId(`um_marketing_${i}`)||yr.marketingkosten||0)+(pfId(`um_logistik_${i}`)||yr.logistikkosten||0)+(pfId(`um_sonstige_${i}`)||yr.sonstigeKosten||0);
       tN+=vNt+hdNt+hiNt;tI+=spI+so;tD+=vD+hdD+hiD-spI-so;
     }
@@ -875,7 +875,7 @@ function restart(){
     haendlerNachkauf:0.3,haendlerFreiware:0.4,haendlerErloesschmaelerung:0.08,
     vereinNachkauf:0,vereinErloesschmaelerung:0,
     hekCosQuotient:2.5,uvpCosQuotient:5.0,
-    vereinMode:'hek',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
+    vereinMode:'uvp',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
     qualVerein:'',warumVerein:'',qualHandel:'',andereVereine:'',umsatzPotenziale:''
   });
   initYearsFresh(3);

@@ -309,8 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="field-group span-2">
           <div class="field-label">Bewertungsgrundlage Vereinsumsatz</div>
           <div class="mode-toggle" id="verein_mode_toggle">
-            <button class="on" onclick="setGlobalMode('verein','hek',this)">Zu HEK</button>
-            <button onclick="setGlobalMode('verein','uvp',this)">Zu UVP</button>
+            <button onclick="setGlobalMode('verein','hek',this)">Zu HEK</button>
+            <button class="on" onclick="setGlobalMode('verein','uvp',this)">Zu UVP</button>
           </div>
         </div>
       </div>
@@ -361,7 +361,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
         </div>
         <div class="field-group">
-          <div class="field-label">Steuersatz (%) <span class="tip">i<span class="tip-box">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Wird nach dem Rabatt abgezogen.</span></span></div>
+          <div class="field-label">Steuersatz (%) <span class="tip">i<span class="tip-box">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Berechnung: (UVP − Rabatt) ÷ (1 + Steuersatz).</span></span></div>
           <input type="number" id="steuer" value="0" step="0.1" min="0" max="100" placeholder="0">
           <span class="field-hint">z.B. 19 für 19% MwSt</span>
         </div>
@@ -711,7 +711,7 @@ function opRenderResult() {
       vereinRabatt=vB*s.vereinNachkauf; vereinErloess=(vB-vereinRabatt)*s.vereinErloesschmaelerung;
       vereinNetto=vB-vereinRabatt-vereinErloess; vereinCos=vB/hek;
     } else {
-      const vNR=vB*(1-s.vereinNachkauf); const vNS=vNR*(1-steuer);
+      const vNR=vB*(1-s.vereinNachkauf); const vNS=vNR/(1+steuer);
       vereinErloess=vNS*s.vereinErloesschmaelerung; vereinNetto=vNS*(1-s.vereinErloesschmaelerung);
       vereinRabatt=vB-vNR; vereinCos=vB/uvp;
     }
@@ -722,7 +722,7 @@ function opRenderResult() {
     const hdFw = yr.haendlerFreiwareHek;
     let hdDirNet;
     if(hdMode==='hek'){hdDirNet=hdB*(1-s.haendlerNachkauf);}
-    else{hdDirNet=hdB*(1-s.haendlerNachkauf)*(1-steuer);}
+    else{hdDirNet=hdB*(1-s.haendlerNachkauf)/(1+steuer);}
     const hdFwNet = hdFw*(1-s.haendlerFreiware);
     const hdBasis = hdDirNet+hdFwNet;
     const hdErloess = hdBasis*s.haendlerErloesschmaelerung;
@@ -739,7 +739,7 @@ function opRenderResult() {
       hiRabatt=hiB*s.haendlerNachkauf; hiErloess=(hiB-hiRabatt)*s.haendlerErloesschmaelerung;
       hiNetto=hiB-hiRabatt-hiErloess; hiCos=hiB/hek;
     } else {
-      const hiNR=hiB*(1-s.haendlerNachkauf); const hiNS=hiNR*(1-steuer);
+      const hiNR=hiB*(1-s.haendlerNachkauf); const hiNS=hiNR/(1+steuer);
       hiErloess=hiNS*s.haendlerErloesschmaelerung; hiNetto=hiNS*(1-s.haendlerErloesschmaelerung);
       hiRabatt=hiB-hiNR; hiCos=hiB/uvp;
     }
@@ -814,12 +814,12 @@ document.addEventListener('input', () => {
       const vB=vMode==='hek'?vH:vU;
       let vNt,vD;
       if(vMode==='hek'){vNt=vB*(1-vN)*(1-vE);vD=vNt-vB/hek;}
-      else{const vNR=vB*(1-vN)*(1-steuer);vNt=vNR*(1-vE);vD=vNt-vB/uvp;}
+      else{const vNR=vB*(1-vN)/(1+steuer);vNt=vNR*(1-vE);vD=vNt-vB/uvp;}
       const hdH=pfId(`um_hdirektHek_${i}`)||yr.haendlerDirektHek||0;
       const hdU=pfId(`um_hdirektUvp_${i}`)||yr.haendlerDirektUvp||0;
       const hdFw=pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0;
       const hdB=hdMode==='hek'?hdH:hdU;
-      let hdDirNet; if(hdMode==='hek'){hdDirNet=hdB*(1-hN);}else{hdDirNet=hdB*(1-hN)*(1-steuer);}
+      let hdDirNet; if(hdMode==='hek'){hdDirNet=hdB*(1-hN);}else{hdDirNet=hdB*(1-hN)/(1+steuer);}
       const hdFwNet=hdFw*(1-hFR); const hdBasis=hdDirNet+hdFwNet;
       const hdNt=hdBasis*(1-hE); let hdCos; if(hdMode==='hek'){hdCos=(hdB+hdFw)/hek;}else{hdCos=hdB/uvp+hdFw/hek;}
       const hdD=hdNt-hdCos;
@@ -828,7 +828,7 @@ document.addEventListener('input', () => {
       const hiB=hdMode==='hek'?hiH:hiU;
       let hiNt,hiD;
       if(hdMode==='hek'){hiNt=hiB*(1-hN)*(1-hE);hiD=hiNt-hiB/hek;}
-      else{const hiNR=hiB*(1-hN)*(1-steuer);hiNt=hiNR*(1-hE);hiD=hiNt-hiB/uvp;}
+      else{const hiNR=hiB*(1-hN)/(1+steuer);hiNt=hiNR*(1-hE);hiD=hiNt-hiB/uvp;}
       const so=(pfId(`um_marketing_${i}`)||yr.marketingkosten||0)+(pfId(`um_logistik_${i}`)||yr.logistikkosten||0)+(pfId(`um_sonstige_${i}`)||yr.sonstigeKosten||0);
       tN+=vNt+hdNt+hiNt; tI+=spI+so; tD+=vD+hdD+hiD-spI-so;
     }
