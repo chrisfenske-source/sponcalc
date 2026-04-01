@@ -5,6 +5,7 @@ const state={
   haendlerNachkauf:0.3,haendlerFreiware:0.4,haendlerErloesschmaelerung:0.08,
   vereinNachkauf:0,vereinErloesschmaelerung:0,
   hekCosQuotient:2.5,uvpCosQuotient:5.0,
+  vereinMode:'hek',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
   qualVerein:'',warumVerein:'',qualHandel:'',andereVereine:'',umsatzPotenziale:'',
   years:[]
 };
@@ -26,11 +27,11 @@ function initYears(n){
     for(let i=current;i<n;i++){
       const s=base+i;
       state.years.push({
-        label:`${s}/${(s+1).toString().slice(-2)}`,
-        cash:0,freiwareMode:'hek',freiwareHek:0,freiwareUvp:0,
-        vereinUmsatzMode:'hek',vereinUmsatzHek:0,vereinUmsatzUvp:0,
-        haendlerDirektMode:'hek',haendlerDirektHek:0,haendlerDirektUvp:0,haendlerFreiwareHek:0,
-        haendlerIndirektMode:'hek',haendlerIndirektHek:0,haendlerIndirektUvp:0,
+        label:`${s}/${(s+1).toString().slice(-2)}`,ligaLabel:'',
+        cash:0,freiwareHek:0,freiwareUvp:0,
+        vereinUmsatzHek:0,vereinUmsatzUvp:0,
+        haendlerDirektHek:0,haendlerDirektUvp:0,haendlerFreiwareHek:0,
+        haendlerIndirektHek:0,haendlerIndirektUvp:0,
         marketingkosten:0,logistikkosten:0,sonstigeKosten:0
       });
     }
@@ -46,11 +47,11 @@ function initYearsFresh(n){
   for(let i=0;i<n;i++){
     const s=base+i;
     state.years.push({
-      label:`${s}/${(s+1).toString().slice(-2)}`,
-      cash:0,freiwareMode:'hek',freiwareHek:0,freiwareUvp:0,
-      vereinUmsatzMode:'hek',vereinUmsatzHek:0,vereinUmsatzUvp:0,
-      haendlerDirektMode:'hek',haendlerDirektHek:0,haendlerDirektUvp:0,haendlerFreiwareHek:0,
-      haendlerIndirektMode:'hek',haendlerIndirektHek:0,haendlerIndirektUvp:0,
+      label:`${s}/${(s+1).toString().slice(-2)}`,ligaLabel:'',
+      cash:0,freiwareHek:0,freiwareUvp:0,
+      vereinUmsatzHek:0,vereinUmsatzUvp:0,
+      haendlerDirektHek:0,haendlerDirektUvp:0,haendlerFreiwareHek:0,
+      haendlerIndirektHek:0,haendlerIndirektUvp:0,
       marketingkosten:0,logistikkosten:0,sonstigeKosten:0
     });
   }
@@ -118,9 +119,10 @@ function restoreStep(step){
     sv('laufzeit',state.laufzeit);
     sv('haendlerName',state.haendlerName); sv('kdnrHaendler',state.kdnrHaendler||'');
     sv('kdnrVereinFreiware',state.kdnrVereinFreiware||''); sv('kdnrVereinNachkauf',state.kdnrVereinNachkauf||'');
-    sv('haendlerNachkauf',state.haendlerNachkauf); sv('haendlerFreiware',state.haendlerFreiware);
-    sv('haendlerErloesschmaelerung',state.haendlerErloesschmaelerung);
-    sv('vereinNachkauf',state.vereinNachkauf); sv('vereinErloesschmaelerung',state.vereinErloesschmaelerung);
+    sv('haendlerNachkauf',state.haendlerNachkauf*100); sv('haendlerFreiware',state.haendlerFreiware*100);
+    sv('haendlerErloesschmaelerung',state.haendlerErloesschmaelerung*100);
+    sv('vereinNachkauf',state.vereinNachkauf*100); sv('vereinErloesschmaelerung',state.vereinErloesschmaelerung*100);
+    sv('steuer',state.steuer*100);
   }
   if(step===2){
     sv('hekCosQuotient',state.hekCosQuotient); sv('uvpCosQuotient',state.uvpCosQuotient);
@@ -148,7 +150,7 @@ function validateStep(step){
     check('liga',!gv('liga'));
     ['haendlerNachkauf','haendlerFreiware','haendlerErloesschmaelerung'].forEach(id=>{
       const v=parseFloat(normNum(document.getElementById(id)?.value));
-      check(id,isNaN(v)||v<0||v>1);
+      check(id,isNaN(v)||v<0||v>100);
     });
     if(!ok&&firstErr){
       const el=document.getElementById(firstErr);
@@ -168,9 +170,11 @@ function collectStep(step){
     state.laufzeit=parseInt(gv('laufzeit'));state.haendlerName=gv('haendlerName');
     state.kdnrVereinFreiware=gv('kdnrVereinFreiware');state.kdnrVereinNachkauf=gv('kdnrVereinNachkauf');
     state.kdnrHaendler=gv('kdnrHaendler');
-    state.haendlerNachkauf=pf('haendlerNachkauf');state.haendlerFreiware=pf('haendlerFreiware');
-    state.haendlerErloesschmaelerung=pf('haendlerErloesschmaelerung');
-    state.vereinNachkauf=pf('vereinNachkauf');state.vereinErloesschmaelerung=pf('vereinErloesschmaelerung');
+    state.haendlerNachkauf=pfPct('haendlerNachkauf');state.haendlerFreiware=pfPct('haendlerFreiware');
+    state.haendlerErloesschmaelerung=pfPct('haendlerErloesschmaelerung');
+    state.vereinNachkauf=pfPct('vereinNachkauf');state.vereinErloesschmaelerung=pfPct('vereinErloesschmaelerung');
+    state.steuer=pf('steuer')/100;
+    state.years.forEach((yr,i)=>{const el=document.getElementById(`ligaLabel_${i}`);if(el)yr.ligaLabel=el.value;});
     initYears(state.laufzeit);
   }
   if(step===2){state.hekCosQuotient=pf('hekCosQuotient');state.uvpCosQuotient=pf('uvpCosQuotient');}
@@ -187,6 +191,7 @@ function gv(id){const el=document.getElementById(id);return el?el.value.trim():'
 function normNum(v){return typeof v==='string'?v.replace(',','.'):v;}
 function pf(id){const el=document.getElementById(id);return el?parseFloat(normNum(el.value))||0:0;}
 function pfId(id){const el=document.getElementById(id);return el?parseFloat(normNum(el.value))||0:0;}
+function pfPct(id){return pf(id)/100;}
 
 // ── SPONSORING UI ──
 function buildSponsoringUI(){
@@ -202,34 +207,19 @@ function buildSponsoringUI(){
 }
 
 function buildSponsoringPanel(i,yr){
+  const spMode=state.sponsoringMode||'hek';
+  const isHek=spMode==='hek';
   return`<div class="field-grid" style="margin-top:20px">
     <div class="field-group">
       <div class="field-label">Cash-Leistung (€) <span class="tip">i<span class="tip-box">Direkter Geldbetrag, den uhlsport dem Verein zahlt. Absolutbetrag eingeben.</span></span></div>
       <input type="number" id="sp_cash_${i}" value="${yr.cash}" min="0" placeholder="0">
     </div>
-    <div class="field-group span-2">
-      <div class="field-label">Freiware – Bewertungsmethode <span class="tip">i<span class="tip-box">Freiware = Sportartikel, die uhlsport kostenlos liefert. Entweder zum HEK (interner Kostenwert) ODER zum UVP (Endpreis). Nie beides eingeben.</span></span></div>
-      <div class="mode-toggle" id="sp_toggle_${i}">
-        <button class="${yr.freiwareMode==='hek'?'on':''}" onclick="setFreiwareMode(${i},'hek')">Zu HEK</button>
-        <button class="${yr.freiwareMode==='uvp'?'on':''}" onclick="setFreiwareMode(${i},'uvp')">Zu UVP</button>
-      </div>
-    </div>
-    <div class="field-group" id="sp_hek_group_${i}" style="${yr.freiwareMode!=='hek'?'display:none':''}">
-      <div class="field-label">Freiware zu HEK (€) <span class="tip">i<span class="tip-box">Wert der Freiware zum Händlereinkaufspreis (HEK = COS × HEK/COS-Quotient). Absolutbetrag eingeben.</span></span></div>
-      <input type="number" id="sp_freiwareHek_${i}" value="${yr.freiwareHek}" min="0" placeholder="0">
-    </div>
-    <div class="field-group" id="sp_uvp_group_${i}" style="${yr.freiwareMode!=='uvp'?'display:none':''}">
-      <div class="field-label">Freiware zu UVP (€) <span class="tip">i<span class="tip-box">Wert der Freiware zum Endkundenpreis. Wird intern automatisch in den COS-Kostenwert umgerechnet.</span></span></div>
-      <input type="number" id="sp_freiwareUvp_${i}" value="${yr.freiwareUvp}" min="0" placeholder="0">
+    <div class="field-group" id="sp_freiware_group_${i}">
+      <div class="field-label">Freiware zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Wert der Freiware zum ${isHek?'Händlereinkaufspreis (HEK)':'Endkundenpreis (UVP)'}. Absolutbetrag eingeben.</span></span></div>
+      <input type="number" id="sp_freiwareHek_${i}" value="${yr.freiwareHek}" min="0" placeholder="0" ${isHek?'':'style="display:none"'}>
+      <input type="number" id="sp_freiwareUvp_${i}" value="${yr.freiwareUvp}" min="0" placeholder="0" ${isHek?'style="display:none"':''}>
     </div>
   </div>`;
-}
-
-function setFreiwareMode(i,mode){
-  state.years[i].freiwareMode=mode;
-  document.getElementById(`sp_hek_group_${i}`).style.display=mode==='hek'?'':'none';
-  document.getElementById(`sp_uvp_group_${i}`).style.display=mode==='uvp'?'':'none';
-  document.getElementById(`sp_toggle_${i}`).querySelectorAll('button').forEach((b,bi)=>b.classList.toggle('on',(bi===0&&mode==='hek')||(bi===1&&mode==='uvp')));
 }
 function collectSponsoringFromDOM(){
   state.years.forEach((yr,i)=>{yr.cash=pfId(`sp_cash_${i}`);yr.freiwareHek=pfId(`sp_freiwareHek_${i}`);yr.freiwareUvp=pfId(`sp_freiwareUvp_${i}`);});
@@ -304,22 +294,14 @@ function switchUmsatzTab(cat,idx){
 }
 
 function buildUmsatzVereinPanel(i,yr){
+  const mode=state.vereinMode||'hek';
+  const isHek=mode==='hek';
   return`
   <div class="field-grid">
-    <div class="field-group span-2">
-      <div class="field-label">Bewertung Vereinsumsatz <span class="tip">i<span class="tip-box">Bestellt der Verein direkt bei uhlsport? Zu HEK oder UVP? Bitte nur eine Option wählen.</span></span></div>
-      <div class="mode-toggle" id="um_verein_toggle_${i}">
-        <button class="${yr.vereinUmsatzMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'verein','hek')">Zu HEK</button>
-        <button class="${yr.vereinUmsatzMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'verein','uvp')">Zu UVP</button>
-      </div>
-    </div>
-    <div class="field-group" id="um_vereinHek_group_${i}" style="${yr.vereinUmsatzMode!=='hek'?'display:none':''}">
-      <div class="field-label">Umsatz Verein zu HEK (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum HEK. Davon werden Vereins-Rabatt, Erlösschmälerungen und Wareneinsatz abgezogen.</span></span></div>
-      <input type="number" id="um_vereinHek_${i}" value="${yr.vereinUmsatzHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-    </div>
-    <div class="field-group" id="um_vereinUvp_group_${i}" style="${yr.vereinUmsatzMode!=='uvp'?'display:none':''}">
-      <div class="field-label">Umsatz Verein zu UVP (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum UVP. Wird intern in HEK umgerechnet.</span></span></div>
-      <input type="number" id="um_vereinUvp_${i}" value="${yr.vereinUmsatzUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    <div class="field-group">
+      <div class="field-label">Umsatz Verein zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum ${isHek?'HEK':'UVP'}. Davon werden Vereins-Rabatt, Erlösschmälerungen und Wareneinsatz abgezogen.</span></span></div>
+      <input type="number" id="um_vereinHek_${i}" value="${yr.vereinUmsatzHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
+      <input type="number" id="um_vereinUvp_${i}" value="${yr.vereinUmsatzUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
   </div>
   <div class="calc-preview" id="prev_verein_${i}">
@@ -331,22 +313,14 @@ function buildUmsatzVereinPanel(i,yr){
   </div>`;}
 
 function buildUmsatzHdirektPanel(i,yr){
+  const mode=state.haendlerMode||'hek';
+  const isHek=mode==='hek';
   return`
   <div class="field-grid">
-    <div class="field-group span-2">
-      <div class="field-label">Bewertung Händler-Direktumsatz <span class="tip">i<span class="tip-box">Direktumsätze des Fachhändlers mit dem Verein – entweder zu HEK oder UVP, nie beides.</span></span></div>
-      <div class="mode-toggle" id="um_hdirekt_toggle_${i}">
-        <button class="${yr.haendlerDirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','hek')">Zu HEK</button>
-        <button class="${yr.haendlerDirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hdirekt','uvp')">Zu UVP</button>
-      </div>
-    </div>
-    <div class="field-group" id="um_hdirektHek_group_${i}" style="${yr.haendlerDirektMode!=='hek'?'display:none':''}">
-      <div class="field-label">Händler-Direkt zu HEK (€) <span class="tip">i<span class="tip-box">Umsatz des Fachhändlers mit dem Verein zu HEK. Abzüge: Nachkauf-Rabatt und Erlösschmälerungen.</span></span></div>
-      <input type="number" id="um_hdirektHek_${i}" value="${yr.haendlerDirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-    </div>
-    <div class="field-group" id="um_hdirektUvp_group_${i}" style="${yr.haendlerDirektMode!=='uvp'?'display:none':''}">
-      <div class="field-label">Händler-Direkt zu UVP (€)</div>
-      <input type="number" id="um_hdirektUvp_${i}" value="${yr.haendlerDirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    <div class="field-group">
+      <div class="field-label">Händler-Direkt zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Umsatz des Fachhändlers mit dem Verein zu ${isHek?'HEK':'UVP'}. Abzüge: Nachkauf-Rabatt und Erlösschmälerungen.</span></span></div>
+      <input type="number" id="um_hdirektHek_${i}" value="${yr.haendlerDirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
+      <input type="number" id="um_hdirektUvp_${i}" value="${yr.haendlerDirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
     <div class="field-group">
       <div class="field-label">Freiware Händler → Verein (HEK, €) <span class="tip">i<span class="tip-box">Ware, die der Händler aus seinem Freiwarenkontingent kostenlos an den Verein weitergibt. Bewertet zu HEK.</span></span></div>
@@ -362,22 +336,14 @@ function buildUmsatzHdirektPanel(i,yr){
   </div>`;}
 
 function buildUmsatzHindirektPanel(i,yr){
+  const mode=state.haendlerMode||'hek';
+  const isHek=mode==='hek';
   return`
   <div class="field-grid">
-    <div class="field-group span-2">
-      <div class="field-label">Bewertung indirekter Händlerumsatz <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
-      <div class="mode-toggle" id="um_hindirekt_toggle_${i}">
-        <button class="${yr.haendlerIndirektMode==='hek'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','hek')">Zu HEK</button>
-        <button class="${yr.haendlerIndirektMode==='uvp'?'on':''}" onclick="setUmsatzMode(${i},'hindirekt','uvp')">Zu UVP</button>
-      </div>
-    </div>
-    <div class="field-group" id="um_hindirektHek_group_${i}" style="${yr.haendlerIndirektMode!=='hek'?'display:none':''}">
-      <div class="field-label">Indirekter Umsatz zu HEK (€)</div>
-      <input type="number" id="um_hindirektHek_${i}" value="${yr.haendlerIndirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
-    </div>
-    <div class="field-group" id="um_hindirektUvp_group_${i}" style="${yr.haendlerIndirektMode!=='uvp'?'display:none':''}">
-      <div class="field-label">Indirekter Umsatz zu UVP (€)</div>
-      <input type="number" id="um_hindirektUvp_${i}" value="${yr.haendlerIndirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
+    <div class="field-group">
+      <div class="field-label">Indirekter Umsatz zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
+      <input type="number" id="um_hindirektHek_${i}" value="${yr.haendlerIndirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
+      <input type="number" id="um_hindirektUvp_${i}" value="${yr.haendlerIndirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
   </div>
   <div class="calc-preview" id="prev_hindirekt_${i}">
@@ -405,19 +371,34 @@ function buildUmsatzSonstigePanel(i,yr){
     </div>
   </div>`;}
 
-function setUmsatzMode(i,type,mode){
-  const map={verein:['vereinUmsatzMode','vereinHek','vereinUvp'],hdirekt:['haendlerDirektMode','hdirektHek','hdirektUvp'],hindirekt:['haendlerIndirektMode','hindirektHek','hindirektUvp']};
-  const stateValueMap={verein:{hek:'vereinUmsatzUvp',uvp:'vereinUmsatzHek'},hdirekt:{hek:'haendlerDirektUvp',uvp:'haendlerDirektHek'},hindirekt:{hek:'haendlerIndirektUvp',uvp:'haendlerIndirektHek'}};
-  const[stateKey,hekKey,uvpKey]=map[type];
-  state.years[i][stateKey]=mode;
-  // Clear the opposite input to prevent stale values affecting calculations
-  const clearInputKey=mode==='hek'?uvpKey:hekKey;
-  const clearEl=document.getElementById(`um_${clearInputKey}_${i}`);
-  if(clearEl){clearEl.value='';state.years[i][stateValueMap[type][mode]]=0;}
-  document.getElementById(`um_${hekKey}_group_${i}`).style.display=mode==='hek'?'':'none';
-  document.getElementById(`um_${uvpKey}_group_${i}`).style.display=mode==='uvp'?'':'none';
-  document.getElementById(`um_${type}_toggle_${i}`).querySelectorAll('button').forEach((b,bi)=>b.classList.toggle('on',(bi===0&&mode==='hek')||(bi===1&&mode==='uvp')));
-  updateUmsatzPreview(i);
+// setUmsatzMode removed — mode is now global per category (setGlobalMode)
+
+function setGlobalMode(cat, mode, btn) {
+  if(cat==='verein') state.vereinMode=mode;
+  else if(cat==='haendler') state.haendlerMode=mode;
+  else if(cat==='sponsoring') state.sponsoringMode=mode;
+  const toggle = btn.closest('.mode-toggle');
+  toggle.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  buildUmsatzUI();
+  buildSponsoringUI();
+  // Re-measure open Sponsoring section
+  const sec4 = document.getElementById('sec4');
+  const body4 = document.getElementById('sec4-body');
+  if (sec4 && body4 && !sec4.classList.contains('collapsed')) {
+    setTimeout(() => { body4.style.maxHeight = body4.scrollHeight + 'px'; }, 100);
+  }
+}
+
+function buildLigaLabelSection() {
+  const container = document.getElementById('ligaLabelContainer');
+  if (!container) return;
+  container.innerHTML = state.years.map((yr, i) => `
+    <div class="field-group">
+      <div class="field-label">${yr.label} – Liga</div>
+      <input type="text" id="ligaLabel_${i}" value="${yr.ligaLabel||''}" placeholder="z. B. Bundesliga">
+    </div>
+  `).join('');
 }
 function collectUmsatzFromDOM(){
   state.years.forEach((yr,i)=>{
@@ -433,12 +414,13 @@ function updateUmsatzPreview(i){
   try{
     const hek = parseFloat(normNum(document.getElementById('hekCosQuotient')?.value)) || state.hekCosQuotient;
     const uvp = parseFloat(normNum(document.getElementById('uvpCosQuotient')?.value)) || state.uvpCosQuotient;
-    const cosR = 1/hek, hekUvpR = hek/uvp;
-    const vN = parseFloat(normNum(document.getElementById('vereinNachkauf')?.value)) || state.vereinNachkauf;
-    const vE = parseFloat(normNum(document.getElementById('vereinErloesschmaelerung')?.value)) || state.vereinErloesschmaelerung;
-    const hN = parseFloat(normNum(document.getElementById('haendlerNachkauf')?.value)) || state.haendlerNachkauf;
-    const hE = parseFloat(normNum(document.getElementById('haendlerErloesschmaelerung')?.value)) || state.haendlerErloesschmaelerung;
-    const hFR = parseFloat(normNum(document.getElementById('haendlerFreiware')?.value)) || state.haendlerFreiware;
+    const cosR = 1/hek;
+    const steuer = (parseFloat(normNum(document.getElementById('steuer')?.value))||0)/100;
+    const vN = (parseFloat(normNum(document.getElementById('vereinNachkauf')?.value))||0)/100;
+    const vE = (parseFloat(normNum(document.getElementById('vereinErloesschmaelerung')?.value))||0)/100;
+    const hN = (parseFloat(normNum(document.getElementById('haendlerNachkauf')?.value))||0)/100;
+    const hE = (parseFloat(normNum(document.getElementById('haendlerErloesschmaelerung')?.value))||0)/100;
+    const hFR = (parseFloat(normNum(document.getElementById('haendlerFreiware')?.value))||0)/100;
     const yr = state.years[i] || {};
     const fmtP = n => n===0?'–':new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
     const setV = (id,val,pos) => {
@@ -448,10 +430,17 @@ function updateUmsatzPreview(i){
     };
 
     // Verein
-    const vMode = yr.vereinUmsatzMode||'hek';
-    const vH = pfId(`um_vereinHek_${i}`)||0, vU = pfId(`um_vereinUvp_${i}`)||0;
-    const vB = vMode==='hek'?vH:vU*hekUvpR;
-    const vRab = vB*vN, vErl = (vB-vRab)*vE, vNetto = vB-vRab-vErl, vCos = vB*cosR;
+    const vMode = state.vereinMode||'hek';
+    const vH = pfId(`um_vereinHek_${i}`)||(vMode==='hek'?yr.vereinUmsatzHek||0:0);
+    const vU = pfId(`um_vereinUvp_${i}`)||(vMode==='uvp'?yr.vereinUmsatzUvp||0:0);
+    const vB = vMode==='hek'?vH:vU;
+    let vRab,vErl,vNetto,vCos;
+    if(vMode==='hek'){
+      vRab=vB*vN; vErl=(vB-vRab)*vE; vNetto=vB-vRab-vErl; vCos=vB/hek;
+    } else {
+      const vNachRabatt=vB*(1-vN); const vNachSteuer=vNachRabatt*(1-steuer);
+      vErl=vNachSteuer*vE; vNetto=vNachSteuer*(1-vE); vRab=vB-vNachRabatt; vCos=vB/uvp;
+    }
     const vDB = vNetto-vCos;
     setV(`prev_verein_rabatt_${i}`, vB>0?-vRab:0);
     setV(`prev_verein_erloess_${i}`, vB>0?-vErl:0);
@@ -459,26 +448,42 @@ function updateUmsatzPreview(i){
     setV(`prev_verein_cos_${i}`, vB>0?-vCos:0);
     setV(`prev_verein_db_${i}`, vB>0?vDB:0, true);
 
-    // Händler direkt — Freiware ist Kostenfaktor, kein Nettoumsatz
-    const hdMode = yr.haendlerDirektMode||'hek';
-    const hdH = pfId(`um_hdirektHek_${i}`)||0, hdU = pfId(`um_hdirektUvp_${i}`)||0;
-    const hdFw = pfId(`um_haendlerFreiwareHek_${i}`)||0;
-    const hdB = hdMode==='hek'?hdH:hdU*hekUvpR;
-    const hdRab = hdB*hN, hdErl = (hdB-hdRab)*hE, hdNetto = hdB-hdRab-hdErl, hdCos = hdB*cosR;
-    const hdFwCost = hdFw*hFR;
-    const hdDB = hdNetto-hdCos-hdFwCost;
+    // Händler direkt: netto = (direktUmsatz_net + FW_net) * (1 - hE)
+    const hdMode = state.haendlerMode||'hek';
+    const hdH = pfId(`um_hdirektHek_${i}`)||(hdMode==='hek'?yr.haendlerDirektHek||0:0);
+    const hdU = pfId(`um_hdirektUvp_${i}`)||(hdMode==='uvp'?yr.haendlerDirektUvp||0:0);
+    const hdFw = pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0;
+    const hdB = hdMode==='hek'?hdH:hdU;
+    let hdDirektNet;
+    if(hdMode==='hek'){hdDirektNet=hdB*(1-hN);}
+    else{hdDirektNet=hdB*(1-hN)*(1-steuer);}
+    const hdFwNet=hdFw*(1-hFR);
+    const hdBasis=hdDirektNet+hdFwNet;
+    const hdErl=hdBasis*hE; const hdNetto=hdBasis*(1-hE);
+    let hdCos;
+    if(hdMode==='hek'){hdCos=(hdB+hdFw)/hek;}
+    else{hdCos=hdB/uvp+hdFw/hek;}
+    const hdRab=hdB*hN;
+    const hdDB=hdNetto-hdCos;
     setV(`prev_hd_rabatt_${i}`, hdB>0?-hdRab:0);
-    setV(`prev_hd_erloess_${i}`, hdB>0?-hdErl:0);
+    setV(`prev_hd_erloess_${i}`, (hdB>0||hdFw>0)?-hdErl:0);
     setV(`prev_hd_netto_${i}`, hdNetto);
-    setV(`prev_hd_cos_${i}`, hdB>0?-hdCos:0);
+    setV(`prev_hd_cos_${i}`, (hdB>0||hdFw>0)?-hdCos:0);
     setV(`prev_hd_db_${i}`, (hdB>0||hdFw>0)?hdDB:0, true);
 
     // Händler indirekt
-    const hiMode = yr.haendlerIndirektMode||'hek';
-    const hiH = pfId(`um_hindirektHek_${i}`)||0, hiU = pfId(`um_hindirektUvp_${i}`)||0;
-    const hiB = hiMode==='hek'?hiH:hiU*hekUvpR;
-    const hiRab = hiB*hN, hiErl = (hiB-hiRab)*hE, hiNetto = hiB-hiRab-hiErl, hiCos = hiB*cosR;
-    const hiDB = hiNetto-hiCos;
+    const hiMode = state.haendlerMode||'hek';
+    const hiH = pfId(`um_hindirektHek_${i}`)||(hiMode==='hek'?yr.haendlerIndirektHek||0:0);
+    const hiU = pfId(`um_hindirektUvp_${i}`)||(hiMode==='uvp'?yr.haendlerIndirektUvp||0:0);
+    const hiB = hiMode==='hek'?hiH:hiU;
+    let hiRab,hiErl,hiNetto,hiCos;
+    if(hiMode==='hek'){
+      hiRab=hiB*hN; hiErl=(hiB-hiRab)*hE; hiNetto=hiB-hiRab-hiErl; hiCos=hiB/hek;
+    } else {
+      const hiNachRabatt=hiB*(1-hN); const hiNachSteuer=hiNachRabatt*(1-steuer);
+      hiErl=hiNachSteuer*hE; hiNetto=hiNachSteuer*(1-hE); hiRab=hiB-hiNachRabatt; hiCos=hiB/uvp;
+    }
+    const hiDB=hiNetto-hiCos;
     setV(`prev_hi_rabatt_${i}`, hiB>0?-hiRab:0);
     setV(`prev_hi_erloess_${i}`, hiB>0?-hiErl:0);
     setV(`prev_hi_netto_${i}`, hiNetto);
@@ -499,33 +504,53 @@ function berechnen(){
   collectStep(3);
   collectStep(5);
   const s=state;
-  const cosHekRatio=1/s.hekCosQuotient;
+  const hek=s.hekCosQuotient, uvp=s.uvpCosQuotient;
+  const steuer=s.steuer||0;
+  const vMode=s.vereinMode||'hek', hdMode=s.haendlerMode||'hek', spMode=s.sponsoringMode||'hek';
   const results=s.years.map(yr=>{
     const cashCost=yr.cash;
-    const sponsoringInvest=cashCost+(yr.freiwareMode==='hek'?yr.freiwareHek*cosHekRatio:yr.freiwareUvp*(1/s.uvpCosQuotient));
-    const freiwareCosVal=yr.freiwareMode==='hek'?yr.freiwareHek*cosHekRatio:yr.freiwareUvp*(1/s.uvpCosQuotient);
+    const fwH=yr.freiwareHek, fwU=yr.freiwareUvp;
+    const freiwareCosVal=spMode==='hek'?fwH/hek:fwU/uvp;
+    const sponsoringInvest=cashCost+freiwareCosVal;
 
-    let vereinHekBrutto=yr.vereinUmsatzMode==='hek'?yr.vereinUmsatzHek:yr.vereinUmsatzUvp*(s.hekCosQuotient/s.uvpCosQuotient);
-    const vereinRabatt=vereinHekBrutto*s.vereinNachkauf;
-    const vereinErloess=(vereinHekBrutto-vereinRabatt)*s.vereinErloesschmaelerung;
-    const vereinNetto=vereinHekBrutto-vereinRabatt-vereinErloess;
-    const vereinCos=vereinHekBrutto*cosHekRatio;
+    // Verein
+    const vB=vMode==='hek'?yr.vereinUmsatzHek:yr.vereinUmsatzUvp;
+    let vereinRabatt,vereinErloess,vereinNetto,vereinCos;
+    if(vMode==='hek'){
+      vereinRabatt=vB*s.vereinNachkauf; vereinErloess=(vB-vereinRabatt)*s.vereinErloesschmaelerung;
+      vereinNetto=vB-vereinRabatt-vereinErloess; vereinCos=vB/hek;
+    } else {
+      const vNachRabatt=vB*(1-s.vereinNachkauf); const vNachSteuer=vNachRabatt*(1-steuer);
+      vereinErloess=vNachSteuer*s.vereinErloesschmaelerung; vereinNetto=vNachSteuer*(1-s.vereinErloesschmaelerung);
+      vereinRabatt=vB-vNachRabatt; vereinCos=vB/uvp;
+    }
     const vereinDB1=vereinNetto-vereinCos;
 
-    let hdHekBrutto=yr.haendlerDirektMode==='hek'?yr.haendlerDirektHek:yr.haendlerDirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
+    // Händler direkt
+    const hdB=hdMode==='hek'?yr.haendlerDirektHek:yr.haendlerDirektUvp;
     const hdFw=yr.haendlerFreiwareHek;
-    const hdFwCost=hdFw*s.haendlerFreiware;
-    const hdRabatt=hdHekBrutto*s.haendlerNachkauf;
-    const hdErloess=(hdHekBrutto-hdRabatt)*s.haendlerErloesschmaelerung;
-    const hdNetto=hdHekBrutto-hdRabatt-hdErloess;
-    const hdCos=hdHekBrutto*cosHekRatio;
-    const hdDB1=hdNetto-hdCos-hdFwCost;
+    let hdDirektNet;
+    if(hdMode==='hek'){hdDirektNet=hdB*(1-s.haendlerNachkauf);}
+    else{hdDirektNet=hdB*(1-s.haendlerNachkauf)*(1-steuer);}
+    const hdFwNet=hdFw*(1-s.haendlerFreiware);
+    const hdBasis=hdDirektNet+hdFwNet;
+    const hdErloess=hdBasis*s.haendlerErloesschmaelerung; const hdNetto=hdBasis*(1-s.haendlerErloesschmaelerung);
+    let hdCos;
+    if(hdMode==='hek'){hdCos=(hdB+hdFw)/hek;}
+    else{hdCos=hdB/uvp+hdFw/hek;}
+    const hdDB1=hdNetto-hdCos;
 
-    let hiHekBrutto=yr.haendlerIndirektMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp*(s.hekCosQuotient/s.uvpCosQuotient);
-    const hiRabatt=hiHekBrutto*s.haendlerNachkauf;
-    const hiErloess=(hiHekBrutto-hiRabatt)*s.haendlerErloesschmaelerung;
-    const hiNetto=hiHekBrutto-hiRabatt-hiErloess;
-    const hiCos=hiHekBrutto*cosHekRatio;
+    // Händler indirekt
+    const hiB=hdMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp;
+    let hiRabatt,hiErloess,hiNetto,hiCos;
+    if(hdMode==='hek'){
+      hiRabatt=hiB*s.haendlerNachkauf; hiErloess=(hiB-hiRabatt)*s.haendlerErloesschmaelerung;
+      hiNetto=hiB-hiRabatt-hiErloess; hiCos=hiB/hek;
+    } else {
+      const hiNachRabatt=hiB*(1-s.haendlerNachkauf); const hiNachSteuer=hiNachRabatt*(1-steuer);
+      hiErloess=hiNachSteuer*s.haendlerErloesschmaelerung; hiNetto=hiNachSteuer*(1-s.haendlerErloesschmaelerung);
+      hiRabatt=hiB-hiNachRabatt; hiCos=hiB/uvp;
+    }
     const hiDB1=hiNetto-hiCos;
 
     const sonstige=yr.marketingkosten+yr.logistikkosten+yr.sonstigeKosten;
@@ -785,36 +810,43 @@ function liveEstimate(){
     const hek=parseFloat(document.getElementById('hekCosQuotient')?.value||state.hekCosQuotient);
     const uvp=parseFloat(document.getElementById('uvpCosQuotient')?.value||state.uvpCosQuotient);
     const cosR=1/hek;
-    const hN=parseFloat(document.getElementById('haendlerNachkauf')?.value||state.haendlerNachkauf);
-    const hE=parseFloat(document.getElementById('haendlerErloesschmaelerung')?.value||state.haendlerErloesschmaelerung);
-    const hFR=parseFloat(document.getElementById('haendlerFreiware')?.value||state.haendlerFreiware);
-    const vN=parseFloat(document.getElementById('vereinNachkauf')?.value||state.vereinNachkauf);
-    const vE=parseFloat(document.getElementById('vereinErloesschmaelerung')?.value||state.vereinErloesschmaelerung);
+    const steuer=(parseFloat(document.getElementById('steuer')?.value)||0)/100;
+    const hN=(parseFloat(document.getElementById('haendlerNachkauf')?.value)||0)/100;
+    const hE=(parseFloat(document.getElementById('haendlerErloesschmaelerung')?.value)||0)/100;
+    const hFR=(parseFloat(document.getElementById('haendlerFreiware')?.value)||0)/100;
+    const vN=(parseFloat(document.getElementById('vereinNachkauf')?.value)||0)/100;
+    const vE=(parseFloat(document.getElementById('vereinErloesschmaelerung')?.value)||0)/100;
+    const vMode=state.vereinMode||'hek';
+    const hdMode=state.haendlerMode||'hek';
+    const spMode=state.sponsoringMode||'hek';
     let tN=0,tI=0,tD=0;
     const n=state.years.length||state.laufzeit;
     for(let i=0;i<n;i++){
       const yr=state.years[i]||{};
       const cash=pfId(`sp_cash_${i}`)||yr.cash||0;
-      const fwMode=yr.freiwareMode||'hek';
       const fwH=pfId(`sp_freiwareHek_${i}`)||yr.freiwareHek||0;
       const fwU=pfId(`sp_freiwareUvp_${i}`)||yr.freiwareUvp||0;
-      const spI=cash+(fwMode==='hek'?fwH/hek:fwU/uvp);
-      const vMode=yr.vereinUmsatzMode||'hek';
-      const vH=(pfId(`um_vereinHek_${i}`)||yr.vereinUmsatzHek||0);
-      const vU=(pfId(`um_vereinUvp_${i}`)||yr.vereinUmsatzUvp||0);
-      const vB=vMode==='hek'?vH:vU*(hek/uvp);
-      const vNt=vB*(1-vN)*(1-vE);const vD=vNt-vB*cosR;
-      const hdMode=yr.haendlerDirektMode||'hek';
-      const hdH=(pfId(`um_hdirektHek_${i}`)||yr.haendlerDirektHek||0);
-      const hdU=(pfId(`um_hdirektUvp_${i}`)||yr.haendlerDirektUvp||0);
-      const hdFw=(pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0);
-      const hdB=hdMode==='hek'?hdH:hdU*(hek/uvp);
-      const hdNt=hdB*(1-hN)*(1-hE);const hdD=hdNt-hdB*cosR-hdFw*hFR;
-      const hiMode=yr.haendlerIndirektMode||'hek';
-      const hiH=(pfId(`um_hindirektHek_${i}`)||yr.haendlerIndirektHek||0);
-      const hiU=(pfId(`um_hindirektUvp_${i}`)||yr.haendlerIndirektUvp||0);
-      const hiB=hiMode==='hek'?hiH:hiU*(hek/uvp);
-      const hiNt=hiB*(1-hN)*(1-hE);const hiD=hiNt-hiB*cosR;
+      const spI=cash+(spMode==='hek'?fwH/hek:fwU/uvp);
+      const vH=(pfId(`um_vereinHek_${i}`)||(vMode==='hek'?yr.vereinUmsatzHek||0:0));
+      const vU=(pfId(`um_vereinUvp_${i}`)||(vMode==='uvp'?yr.vereinUmsatzUvp||0:0));
+      const vB=vMode==='hek'?vH:vU;
+      let vNt,vD;
+      if(vMode==='hek'){vNt=vB*(1-vN)*(1-vE);vD=vNt-vB/hek;}
+      else{const vNR=vB*(1-vN)*(1-steuer);vNt=vNR*(1-vE);vD=vNt-vB/uvp;}
+      const hdH=(pfId(`um_hdirektHek_${i}`)||(hdMode==='hek'?yr.haendlerDirektHek||0:0));
+      const hdU=(pfId(`um_hdirektUvp_${i}`)||(hdMode==='uvp'?yr.haendlerDirektUvp||0:0));
+      const hdFwL=(pfId(`um_haendlerFreiwareHek_${i}`)||yr.haendlerFreiwareHek||0);
+      const hdB=hdMode==='hek'?hdH:hdU;
+      let hdDirNet; if(hdMode==='hek'){hdDirNet=hdB*(1-hN);}else{hdDirNet=hdB*(1-hN)*(1-steuer);}
+      const hdFwNet2=hdFwL*(1-hFR); const hdBasis2=hdDirNet+hdFwNet2;
+      const hdNt=hdBasis2*(1-hE); let hdCos2; if(hdMode==='hek'){hdCos2=(hdB+hdFwL)/hek;}else{hdCos2=hdB/uvp+hdFwL/hek;}
+      const hdD=hdNt-hdCos2;
+      const hiH=(pfId(`um_hindirektHek_${i}`)||(hdMode==='hek'?yr.haendlerIndirektHek||0:0));
+      const hiU=(pfId(`um_hindirektUvp_${i}`)||(hdMode==='uvp'?yr.haendlerIndirektUvp||0:0));
+      const hiB=hdMode==='hek'?hiH:hiU;
+      let hiNt,hiD;
+      if(hdMode==='hek'){hiNt=hiB*(1-hN)*(1-hE);hiD=hiNt-hiB/hek;}
+      else{const hiNR=hiB*(1-hN)*(1-steuer);hiNt=hiNR*(1-hE);hiD=hiNt-hiB/uvp;}
       const so=(pfId(`um_marketing_${i}`)||yr.marketingkosten||0)+(pfId(`um_logistik_${i}`)||yr.logistikkosten||0)+(pfId(`um_sonstige_${i}`)||yr.sonstigeKosten||0);
       tN+=vNt+hdNt+hiNt;tI+=spI+so;tD+=vD+hdD+hiD-spI-so;
     }
@@ -843,6 +875,7 @@ function restart(){
     haendlerNachkauf:0.3,haendlerFreiware:0.4,haendlerErloesschmaelerung:0.08,
     vereinNachkauf:0,vereinErloesschmaelerung:0,
     hekCosQuotient:2.5,uvpCosQuotient:5.0,
+    vereinMode:'hek',haendlerMode:'hek',sponsoringMode:'hek',steuer:0,
     qualVerein:'',warumVerein:'',qualHandel:'',andereVereine:'',umsatzPotenziale:''
   });
   initYearsFresh(3);
