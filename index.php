@@ -195,6 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   font-family: var(--font-mono); font-size: 14px; font-weight: 700; color: var(--text);
 }
 .op-sticky-val.pos { color: var(--green); }
+.op-sticky-val.warn { color: #fbbf24; }
 .op-sticky-val.neg { color: var(--red); }
 .op-calc-btn {
   display: flex; align-items: center; gap: 8px;
@@ -782,10 +783,11 @@ function opUpdateSticky(netto, invest, db, dbq) {
     el.textContent = val;
     el.className = 'op-sticky-val' + (cls ? ' '+cls : '');
   };
+  const opTier = dbq>=0.30?'pos':dbq>=0.20?'warn':'neg';
   setV('liveNetto', fmtK2(netto), netto>0?'pos':'');
   setV('liveInvest', fmtK2(-invest), 'neg');
-  setV('liveDB', fmtK2(db), db>=0?'pos':'neg');
-  setV('liveDBQ', (dbq*100).toFixed(1)+'%', db>=0?'pos':'neg');
+  setV('liveDB', fmtK2(db), opTier==='neg'?'neg':'pos');
+  setV('liveDBQ', (dbq*100).toFixed(1)+'%', opTier);
 }
 
 // Live estimate on input

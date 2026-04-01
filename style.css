@@ -134,6 +134,7 @@ body {
   transition: all 0.25s; white-space: nowrap;
 }
 .live-verdict.pos { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.55); color: #ffffff; }
+.live-verdict.warn { background: rgba(217,119,6,0.3); border-color: rgba(251,191,36,0.55); color: #fde68a; }
 .live-verdict.neg { background: rgba(239,68,68,0.25); border-color: rgba(252,165,165,0.55); color: #fecaca; }
 
 /* ── LAYOUT ── */
@@ -379,6 +380,7 @@ select option { background: var(--white); }
   display: flex; align-items: center; gap: 20px;
 }
 .result-verdict.pos { background: var(--preview-grad); }
+.result-verdict.warn { background: linear-gradient(135deg, #d97706 0%, #92400e 100%); }
 .result-verdict.neg { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
 .verdict-icon { font-size: 32px; line-height: 1; }
 .verdict-text h2 {

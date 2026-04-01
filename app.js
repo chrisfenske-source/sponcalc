@@ -568,9 +568,13 @@ function berechnen(){
 
 // ── RENDER RESULT ──
 function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
-  const pos=totalDB>=0;
+  // Tier: pos = DB-Quote > 30%, warn = 20-30%, neg = < 20%
+  const tier = totalDbQuote>=0.30 ? 'pos' : totalDbQuote>=0.20 ? 'warn' : 'neg';
+  const pos = tier==='pos';
   const memePos='https://media.giphy.com/media/fDbzXb6Cv5L56/giphy.gif';
-  const memeNeg='https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExdTZvamw1aWpwMGpubGM4M2tjeWhwOGNxcjkyaXE4dGV6cnByazlnZyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/uP89pJyXBDqVi/giphy.gif';
+  const memeWarn='https://media.giphy.com/media/fyitaOqckoJX9k9tf2/giphy.gif';
+  const memeNeg='https://media.giphy.com/media/kCoIap1RrUqE1f0fKu/giphy.gif';
+  const meme = tier==='pos'?memePos:tier==='warn'?memeWarn:memeNeg;
   const yearCols=results.map(r=>`<th>${r.label}</th>`).join('');
   const totalCol=results.length>1?'<th>Gesamt</th>':'';
   const cols=results.length+(results.length>1?2:1);
@@ -604,23 +608,23 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
     </div>`:'';
 
   document.getElementById('resultContent').innerHTML=`
-    <div class="result-verdict ${pos?'pos':'neg'}">
-      <div class="verdict-icon">${pos?'🏆':'🚨'}</div>
+    <div class="result-verdict ${tier}">
+      <div class="verdict-icon">${tier==='pos'?'🏆':tier==='warn'?'🤔':'🚨'}</div>
       <div class="verdict-text">
-        <h2>${pos?'Deal empfehlenswert':'Deal nicht empfehlenswert'}</h2>
-        <p>${pos?`DB gesamt: ${fmt(totalDB)} · DB-Quote: ${(totalDbQuote*100).toFixed(1)}%`:`Negativer Deckungsbeitrag: ${fmt(totalDB)} — der Deal kostet mehr als er einbringt.`}</p>
+        <h2>${tier==='pos'?'Deal empfehlenswert':tier==='warn'?'Deal prüfungswürdig':'Deal nicht empfehlenswert'}</h2>
+        <p>${tier==='pos'?`DB-Quote über 30% – Deal ist wirtschaftlich.`:tier==='warn'?`DB-Quote zwischen 20–30% – Rücksprache erforderlich.`:`DB-Quote unter 20% – nur im Ausnahmefall genehmigungsfähig.`} DB: ${fmt(totalDB)} · DB-Quote: ${(totalDbQuote*100).toFixed(1)}%</p>
       </div>
     </div>
 
     <div class="meme-wrap">
-      <img src="${pos?memePos:memeNeg}" alt="Reaction">
-      <div class="meme-cap">${pos?'"Let\'s close this deal." 🤝':'"Walk away from this one." 🙅'}</div>
+      <img src="${meme}" alt="Reaction">
+      <div class="meme-cap">${tier==='pos'?'"Let\'s close this deal." 🤝':tier==='warn'?'"Bof… on verra." 🤷':'"Walk away from this one." 🙅'}</div>
     </div>
 
     <div class="kpi-strip">
       <div class="kpi-cell"><div class="kpi-lbl">Nettoumsatz</div><div class="kpi-val ${totalNetto>0?'pos':''}">${fmtK(totalNetto)}</div></div>
       <div class="kpi-cell"><div class="kpi-lbl">Invest</div><div class="kpi-val neg">${fmtK(-totalInvest)}</div></div>
-      <div class="kpi-cell"><div class="kpi-lbl">Deckungsbeitrag</div><div class="kpi-val ${pos?'pos':'neg'}">${fmtK(totalDB)}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">Deckungsbeitrag</div><div class="kpi-val ${tier==='neg'?'neg':'pos'}">${fmtK(totalDB)}</div></div>
     </div>
 
     <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Detailergebnis je Jahr</div><div class="section-head-line"></div></div>
@@ -798,10 +802,11 @@ function updateLiveBar(netto,invest,db,dbq,calculated){
   }
   elN.textContent=fmtK(netto);elN.className='live-pill-value'+(netto>0?' active':'');
   elI.textContent=fmtK(-invest);elI.className='live-pill-value neg';
-  elD.textContent=fmtK(db);elD.className='live-pill-value'+(db>=0?' pos':' neg');
-  elQ.textContent=(dbq*100).toFixed(1)+'%';elQ.className='live-pill-value'+(db>=0?' pos':' neg');
-  badge.className='live-verdict'+(db>=0?' pos':' neg');
-  badge.textContent=db>=0?'✓ Deal positiv':'✗ Deal negativ';
+  const liveTier=dbq>=0.30?'pos':dbq>=0.20?'warn':'neg';
+  elD.textContent=fmtK(db);elD.className='live-pill-value'+(liveTier==='neg'?' neg':' pos');
+  elQ.textContent=(dbq*100).toFixed(1)+'%';elQ.className='live-pill-value'+(liveTier==='neg'?' neg':' pos');
+  badge.className='live-verdict '+liveTier;
+  badge.textContent=liveTier==='pos'?'✓ Deal positiv':liveTier==='warn'?'⚠ Prüfung erforderlich':'✗ Deal ablehnen';
 }
 
 function liveEstimate(){
