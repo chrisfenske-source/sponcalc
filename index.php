@@ -272,6 +272,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="op-section-body" id="sec1-body">
+      <div class="field-grid" style="margin-bottom:8px">
+        <div class="field-group">
+          <div class="field-label">Steuersatz Markt (%) <span class="tip">i<span class="tip-box">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Berechnung: (UVP − Rabatt) ÷ (1 + Steuersatz).</span></span></div>
+          <input type="number" id="steuer" value="0" step="0.1" min="0" max="100" placeholder="0">
+          <span class="field-hint">z.B. 19 für 19% MwSt</span>
+        </div>
+      </div>
       <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Verein</div><div class="section-head-line"></div></div>
       <div class="field-grid">
         <div class="field-group">
@@ -359,11 +366,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button class="on" onclick="setGlobalMode('sponsoring','hek',this)">Zu HEK</button>
             <button onclick="setGlobalMode('sponsoring','uvp',this)">Zu UVP</button>
           </div>
-        </div>
-        <div class="field-group">
-          <div class="field-label">Steuersatz (%) <span class="tip">i<span class="tip-box">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Berechnung: (UVP − Rabatt) ÷ (1 + Steuersatz).</span></span></div>
-          <input type="number" id="steuer" value="0" step="0.1" min="0" max="100" placeholder="0">
-          <span class="field-hint">z.B. 19 für 19% MwSt</span>
         </div>
       </div>
 
