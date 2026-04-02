@@ -6,7 +6,7 @@
 :root {
   /* ── Surfaces ── */
   --white:   #ffffff;
-  --bg:      #EDF0F4;   /* Page background — cool slate wash */
+  --bg:      #f2f2f2;   /* Page background */
   --surface: #ffffff;   /* Card / section surface */
 
   /* ── Slate scale ── */
@@ -21,12 +21,14 @@
   --slate-800: #1E293B;
   --slate-900: #0F172A;
 
-  /* ── Primary: Indigo ── */
-  --primary:        #4F46E5;
-  --primary-hover:  #4338CA;
-  --primary-active: #3730A3;
-  --primary-light:  #EEF2FF;
-  --primary-ring:   rgba(79, 70, 229, 0.18);
+  /* ── Primary: Purple ── */
+  --primary:          #7169f0;
+  --primary-hover:    #5f57e0;
+  --primary-active:   #4f46d0;
+  --primary-light:    #f0eeff;
+  --primary-ring:     rgba(113, 105, 240, 0.18);
+  --primary-gradient: linear-gradient(to left, #7169f0, #a030e9);
+  --cta-gradient:     linear-gradient(to right, #fe8116, #f02306);
 
   /* ── Semantic text & borders ── */
   --text:           #1E293B;   /* Slate-800 */
@@ -56,8 +58,8 @@
   --preview-grad: linear-gradient(135deg, #4338CA 0%, #4F46E5 50%, #6366F1 100%);
 
   /* ── Typography ── */
-  --font-body: 'Figtree', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'Inter', sans-serif;
 
   /* ── Radius ── */
   --radius:    8px;
@@ -218,12 +220,14 @@ body {
 
 /* ── SECTION HEADER (divider label) ── */
 .section-head {
-  display: flex; align-items: center; gap: 10px; margin: 24px 0 14px;
+  display: flex; align-items: center; gap: 0;
+  height: 48px; margin: 20px -20px 16px;
+  padding: 0 20px; background: #eeeeee;
 }
-.section-head-line { flex: 1; height: 1px; background: var(--border); }
+.section-head-line { display: none; }
 .section-head-label {
-  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted);
+  font-family: var(--font-body); font-size: 24px; font-weight: 700;
+  text-transform: none; letter-spacing: 0; color: var(--text);
   white-space: nowrap;
 }
 
@@ -243,8 +247,8 @@ body {
 /* ── INPUTS ── */
 input[type="text"], input[type="number"], select, textarea {
   background: var(--surface);
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-md);
+  border: 1px solid #000000;
+  border-radius: 7px;
   padding: 10px 12px;
   color: var(--text); font-family: var(--font-body); font-size: 14px;
   width: 100%; outline: none;
@@ -293,21 +297,23 @@ select option { background: var(--white); }
 
 /* ── HEK / UVP TOGGLE ── */
 .mode-toggle {
-  display: flex; border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-md); overflow: hidden;
-  background: var(--slate-100); padding: 2px;
+  display: flex; border: 1px solid #000000;
+  border-radius: 7px; overflow: hidden;
+  background: var(--white); padding: 0; width: 100%;
 }
 .mode-toggle button {
-  flex: 1; padding: 7px 12px; background: transparent; border: none;
-  color: var(--text-muted); font-family: var(--font-mono); font-size: 11px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-  cursor: pointer; transition: all 0.15s; border-radius: calc(var(--radius-md) - 2px);
+  flex: 1; padding: 11px 12px; background: var(--white); border: none;
+  color: rgba(0,0,0,0.28); font-family: var(--font-body); font-size: 13px;
+  font-weight: 700; text-transform: none; letter-spacing: 0;
+  cursor: pointer; transition: all 0.15s; border-radius: 0;
+  border-right: 1px solid #000000;
 }
+.mode-toggle button:last-child { border-right: none; }
 .mode-toggle button.on {
-  background: var(--primary); color: var(--white);
-  box-shadow: 0 1px 3px rgba(79,70,229,0.3);
+  background: var(--primary-gradient); color: var(--white);
+  border-color: transparent;
 }
-.mode-toggle button:not(.on):hover { background: var(--slate-200); color: var(--text); }
+.mode-toggle button:not(.on):hover { background: #f5f5f5; color: var(--text); }
 
 /* ── LOCK BOX ── */
 .lock-box {
@@ -327,19 +333,40 @@ select option { background: var(--white); }
 .quotient-fields { opacity: 0.35; pointer-events: none; transition: opacity 0.2s; }
 .quotient-fields.unlocked { opacity: 1; pointer-events: auto; }
 
-/* ── YEAR TABS ── */
-.year-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1.5px solid var(--border); }
-.year-tab {
-  padding: 8px 20px; background: transparent; border: none;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted);
-  cursor: pointer; transition: all 0.15s;
-  border-bottom: 2px solid transparent; margin-bottom: -1.5px;
+/* ── YEAR TABS (legacy, hidden) ── */
+.year-tabs { display: none; }
+.year-panel { display: block; }
+
+/* ── YEAR STACK ── */
+.year-stack-item + .year-stack-item {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
 }
-.year-tab:hover { color: var(--text); }
-.year-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.year-panel { display: none; }
-.year-panel.visible { display: block; }
+.year-stack-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.year-stack-label span {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--white);
+  background: var(--primary-gradient);
+  padding: 4px 12px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.year-stack-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
 
 /* ── BUTTONS ── */
 .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; gap: 12px; }

@@ -64,43 +64,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>uhlsport — Kalkulation Ausrüstungsverträge</title>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
 /* ── ONE-PAGE LAYOUT ── */
 
 .op-section {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: 10px;
+  border: none;
+  border-radius: 26px;
+  box-shadow: 2px 6px 18.7px 0px rgba(0,0,0,0.25);
+  margin-bottom: 12px;
   overflow: hidden;
 }
 .op-section-header {
-  display: flex; align-items: center; gap: 14px;
-  padding: 15px 20px;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px;
+  min-height: 75px;
   background: var(--surface);
   border-bottom: 1px solid transparent;
   cursor: pointer; user-select: none;
   transition: background 0.15s;
 }
-.op-section:not(.collapsed) .op-section-header { border-bottom-color: var(--border); }
-.op-section-header:hover { background: var(--slate-50); }
+.op-section:not(.collapsed) .op-section-header { border-bottom-color: transparent; }
+.op-section-header:hover { background: #f9f9f9; }
 .op-section-num {
-  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
-  color: var(--white); background: var(--primary);
-  width: 26px; height: 26px; border-radius: 50%;
+  font-family: var(--font-body); font-size: 28px; font-weight: 700;
+  color: var(--white); background: var(--primary-gradient);
+  width: 51px; height: 51px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; letter-spacing: 0;
-  transition: box-shadow 0.2s;
+  opacity: 0.35;
+  transition: opacity 0.2s;
 }
 .op-section:not(.collapsed) .op-section-num {
-  box-shadow: 0 0 0 3px var(--primary-ring);
+  opacity: 1;
 }
 .op-section-title {
-  font-family: var(--font-body); font-size: 13px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text);
+  font-family: var(--font-body); font-size: 18px; font-weight: 700;
+  text-transform: none; letter-spacing: 0; color: var(--text);
   flex: 1;
 }
 .op-section-desc {
@@ -171,8 +173,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* Sticky bottom bar */
 .op-sticky {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 299;
-  background: var(--surface); border-top: 1px solid var(--border);
-  box-shadow: 0 -4px 20px rgba(15,23,42,0.09);
+  background: var(--surface); border-top: none;
+  box-shadow: 0 -2px 24px rgba(0,0,0,0.2);
   padding: 12px 24px;
   display: flex; align-items: center; justify-content: center; gap: 16px;
 }
@@ -200,13 +202,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .op-calc-btn {
   display: flex; align-items: center; gap: 8px;
   height: 44px; padding: 0 28px;
-  background: #f97316; border: none; color: var(--white);
+  background: var(--cta-gradient); border: none; color: var(--white);
   border-radius: var(--radius-md);
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  font-family: var(--font-body); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s; flex-shrink: 0;
+  transition: opacity 0.15s, box-shadow 0.15s; flex-shrink: 0;
 }
-.op-calc-btn:hover { background: #ea6c0a; box-shadow: 0 4px 14px rgba(249,115,22,0.4); }
+.op-calc-btn:hover { opacity: 0.9; box-shadow: 0 4px 14px rgba(254,129,22,0.4); }
 .op-action-btns { display: flex; gap: 8px; }
 .op-refresh-btn {
   display: flex; align-items: center; gap: 6px;
@@ -381,7 +383,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <input type="text" id="verantwortlich" placeholder="z. B. Max Mustermann">
         </div>
         <div class="field-group">
-          <div class="field-label">Laufzeit <span class="tip">i<span class="tip-box">Pro Jahr wird ein eigener Tab für Sponsoring und Umsatz angelegt.</span></span></div>
+          <div class="field-label">Laufzeit <span class="tip">i<span class="tip-box">Pro Jahr wird ein eigener Abschnitt für Sponsoring und Umsatz angelegt.</span></span></div>
           <select id="laufzeit" onchange="onLaufzeitChange()">
             <option value="1">1 Jahr</option>
             <option value="2">2 Jahre</option>

@@ -196,13 +196,14 @@ function pfPct(id){return pf(id)/100;}
 // ── SPONSORING UI ──
 function buildSponsoringUI(){
   const tabs=document.getElementById('yearTabsContainer'),panels=document.getElementById('yearPanelsContainer');
-  tabs.innerHTML='';panels.innerHTML='';
+  if(tabs) tabs.style.display='none';
+  panels.innerHTML='';
   state.years.forEach((yr,i)=>{
-    const t=document.createElement('button');
-    t.className='year-tab'+(i===0?' active':'');t.textContent=yr.label;t.onclick=()=>switchTab('sp',i);tabs.appendChild(t);
-    const p=document.createElement('div');
-    p.className='year-panel'+(i===0?' visible':'');p.id=`sp_panel_${i}`;
-    p.innerHTML=buildSponsoringPanel(i,yr);panels.appendChild(p);
+    const item=document.createElement('div');
+    item.className='year-stack-item';
+    item.id=`sp_panel_${i}`;
+    item.innerHTML=`<div class="year-stack-label"><span>${yr.label}</span></div>${buildSponsoringPanel(i,yr)}`;
+    panels.appendChild(item);
   });
 }
 
@@ -239,8 +240,11 @@ function buildUmsatzUI(){
     {key:'sonstige',  num:'04', title:'Sonstige Kosten',                  desc:'Marketing, Logistik & weitere Kosten', build:buildUmsatzSonstigePanel},
   ];
   cats.forEach(cat=>{
-    const tabs=state.years.map((yr,i)=>`<button class="year-tab${i===0?' active':''}" onclick="switchUmsatzTab('${cat.key}',${i})">${yr.label}</button>`).join('');
-    const panels=state.years.map((yr,i)=>`<div class="year-panel${i===0?' visible':''}" id="umsatz_${cat.key}_panel_${i}">${cat.build(i,yr)}</div>`).join('');
+    const panels=state.years.map((yr,i)=>`
+      <div class="year-stack-item" id="umsatz_${cat.key}_panel_${i}">
+        <div class="year-stack-label"><span>${yr.label}</span></div>
+        ${cat.build(i,yr)}
+      </div>`).join('');
     const sec=document.createElement('div');
     sec.className='op-section collapsed';
     sec.id=`umsatz_cat_${cat.key}`;
@@ -252,7 +256,6 @@ function buildUmsatzUI(){
         ${chev}
       </div>
       <div class="op-section-body" id="umsatz_cat_body_${cat.key}" style="max-height:0;padding-top:0;padding-bottom:0">
-        <div class="year-tabs" id="umsatz_tabs_${cat.key}">${tabs}</div>
         <div id="umsatz_panels_${cat.key}">${panels}</div>
       </div>`;
     container.appendChild(sec);
