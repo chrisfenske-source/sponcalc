@@ -634,11 +634,11 @@ function onLaufzeitChange() {
   buildLigaLabelSection();
   buildSponsoringUI();
   buildUmsatzUI();
-  // Re-measure open section 4 (Sponsoring)
+  // Keep open sections unconstrained after content rebuild
   const sec4 = document.getElementById('sec4');
   const body4 = document.getElementById('sec4-body');
   if (sec4 && !sec4.classList.contains('collapsed')) {
-    body4.style.maxHeight = body4.scrollHeight + 'px';
+    body4.style.maxHeight = 'none';
   }
 }
 
@@ -898,7 +898,7 @@ function rebuildYearUI() {
     const sec = document.getElementById('sec'+i);
     const body = document.getElementById('sec'+i+'-body');
     if (sec && body && !sec.classList.contains('collapsed')) {
-      setTimeout(() => { body.style.maxHeight = body.scrollHeight + 'px'; }, 100);
+      body.style.maxHeight = 'none';
     }
   });
 }
