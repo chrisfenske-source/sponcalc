@@ -634,12 +634,14 @@ function onLaufzeitChange() {
   buildLigaLabelSection();
   buildSponsoringUI();
   buildUmsatzUI();
-  // Keep open sections unconstrained after content rebuild
-  const sec4 = document.getElementById('sec4');
-  const body4 = document.getElementById('sec4-body');
-  if (sec4 && !sec4.classList.contains('collapsed')) {
-    body4.style.maxHeight = 'none';
-  }
+  // Keep all open sections unconstrained after content rebuild
+  ['sec1', 'sec4'].forEach(id => {
+    const sec = document.getElementById(id);
+    const body = document.getElementById(id + '-body');
+    if (sec && body && !sec.classList.contains('collapsed')) {
+      body.style.maxHeight = 'none';
+    }
+  });
 }
 
 // Collect all data from DOM at once (no step concept)
