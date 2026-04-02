@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 .op-section-body {
   padding: 22px 20px 48px;
   overflow: hidden;
-  transition: max-height 0.3s ease, padding 0.3s ease;
+  transition: max-height 0.3s ease;
 }
 .op-section.collapsed .op-section-body {
   max-height: 0 !important;
