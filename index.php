@@ -752,11 +752,15 @@ function opRenderResult() {
     }
     const hiDB1 = hiNetto-hiCos;
 
+    const hdRabatt = hdB*s.haendlerNachkauf;
+    const vereinBrutto = vB;
+    const hdBrutto = hdB+hdFw;
+    const hiBrutto = hiB;
     const sonstige = yr.marketingkosten+yr.logistikkosten+yr.sonstigeKosten;
     const gesamtNetto = vereinNetto+hdNetto+hiNetto;
     const gesamtDB = vereinDB1+hdDB1+hiDB1-sponsoringInvest-sonstige;
     const dbQuote = gesamtNetto>0?gesamtDB/gesamtNetto:0;
-    return {label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinNetto,vereinCos,vereinDB1,hdNetto,hdCos,hdDB1,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
+    return {label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
   });
   const totalNetto = results.reduce((a,r)=>a+r.gesamtNetto,0);
   const totalInvest = results.reduce((a,r)=>a+r.sponsoringInvest+r.sonstige,0);

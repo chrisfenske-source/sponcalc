@@ -556,11 +556,15 @@ function berechnen(){
     }
     const hiDB1=hiNetto-hiCos;
 
+    const hdRabatt=hdB*s.haendlerNachkauf;
+    const vereinBrutto=vB;
+    const hdBrutto=hdB+hdFw;
+    const hiBrutto=hiB;
     const sonstige=yr.marketingkosten+yr.logistikkosten+yr.sonstigeKosten;
     const gesamtNetto=vereinNetto+hdNetto+hiNetto;
     const gesamtDB=vereinDB1+hdDB1+hiDB1-sponsoringInvest-sonstige;
     const dbQuote=gesamtNetto>0?gesamtDB/gesamtNetto:0;
-    return{label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinNetto,vereinCos,vereinDB1,hdNetto,hdCos,hdDB1,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
+    return{label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
   });
   const totalNetto=results.reduce((a,r)=>a+r.gesamtNetto,0);
   const totalInvest=results.reduce((a,r)=>a+r.sponsoringInvest+r.sonstige,0);
@@ -642,6 +646,9 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
         <tr class="section-head-row"><td colspan="${cols}">Umsatz Verein direkt</td></tr>
+        ${row('Bruttoumsatz Verein',r=>r.vereinBrutto)}
+        ${row('./. Rabatt',r=>-r.vereinRabatt,false,true)}
+        ${row('./. Erlösschmälerungen',r=>-r.vereinErloess,false,true)}
         ${row('Nettoumsatz Verein',r=>r.vereinNetto)}
         ${row('./. Wareneinsatz (COS)',r=>-r.vereinCos,false,true)}
         ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.vereinNetto?-r.vereinCos/r.vereinNetto:0,true)}
@@ -650,6 +657,9 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
         <tr class="section-head-row"><td colspan="${cols}">Umsatz Fachhändler direkt</td></tr>
+        ${row('Bruttoumsatz Händler direkt',r=>r.hdBrutto)}
+        ${row('./. Rabatt',r=>-r.hdRabatt,false,true)}
+        ${row('./. Erlösschmälerungen',r=>-r.hdErloess,false,true)}
         ${row('Nettoumsatz Händler direkt',r=>r.hdNetto)}
         ${row('./. Wareneinsatz (COS)',r=>-r.hdCos,false,true)}
         ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.hdNetto?-r.hdCos/r.hdNetto:0,true)}
@@ -658,6 +668,9 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
         <tr class="section-head-row"><td colspan="${cols}">Umsatz Fachhändler indirekt</td></tr>
+        ${row('Bruttoumsatz Händler indirekt',r=>r.hiBrutto)}
+        ${row('./. Rabatt',r=>-r.hiRabatt,false,true)}
+        ${row('./. Erlösschmälerungen',r=>-r.hiErloess,false,true)}
         ${row('Nettoumsatz Händler indirekt',r=>r.hiNetto)}
         ${row('./. Wareneinsatz (COS)',r=>-r.hiCos,false,true)}
         ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.hiNetto?-r.hiCos/r.hiNetto:0,true)}
