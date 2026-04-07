@@ -603,17 +603,45 @@ select option { background: var(--white); }
   .result-verdict { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .kpi-strip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
-  /* One-page mode: show only the result content */
-  body.printing-result * { visibility: hidden; }
-  body.printing-result #resultContent,
-  body.printing-result #resultContent * { visibility: visible; }
-  body.printing-result #resultContent {
-    position: fixed; top: 0; left: 0; right: 0;
-    padding: 24px; background: #fff;
+  /* One-page mode: hide everything except the result */
+  body.printing-result .op-section,
+  body.printing-result .op-sticky,
+  body.printing-result .live-bar,
+  body.printing-result .pdf-btn,
+  body.printing-result .email-btn,
+  body.printing-result .restart-btn,
+  body.printing-result .umsatz-group-headline { display: none !important; }
+
+  /* Result-Wrapper: normaler Dokumentfluss, kein fixed */
+  body.printing-result #opResultWrapper { display: block !important; }
+  body.printing-result .op-result {
+    border: none !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
+    animation: none !important;
   }
+  body.printing-result #resultContent {
+    position: static;
+    padding: 0;
+    background: #fff;
+  }
+
+  /* Seitenumbrüche */
+  body.printing-result .result-verdict { break-inside: avoid; }
+  body.printing-result .kpi-strip      { break-inside: avoid; }
+  body.printing-result .qual-grid      { break-inside: avoid; }
+  body.printing-result .info-strip     { break-inside: avoid; }
+  body.printing-result .rtable tr      { break-inside: avoid; }
+
+  /* Hintergrundfarben erhalten */
   body.printing-result .result-verdict,
   body.printing-result .kpi-strip,
-  body.printing-result .section-head-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body.printing-result .section-head-row,
+  body.printing-result .rtable tr.row-sub td,
+  body.printing-result .rtable tr.section-head-row--total td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Overflow-Container aufheben */
+  body.printing-result [style*="overflow-x"] { overflow: visible !important; }
 }
 
 /* ── RESPONSIVE ── */
