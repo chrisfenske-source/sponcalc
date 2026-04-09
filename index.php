@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   border-radius: 26px;
   box-shadow: 2px 6px 18.7px 0px rgba(0,0,0,0.25);
   margin-bottom: 12px;
-  overflow: hidden;
+  overflow: visible;
 }
 .op-section-header {
   display: flex; align-items: center; gap: 16px;
@@ -85,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   border-bottom: 1px solid transparent;
   cursor: pointer; user-select: none;
   transition: background 0.15s;
+  border-radius: 26px 26px 0 0;
+}
+.op-section.collapsed .op-section-header {
+  border-radius: 26px;
 }
 .op-section:not(.collapsed) .op-section-header { border-bottom-color: transparent; }
 .op-section-header:hover { background: #f9f9f9; }
@@ -247,9 +251,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 @media (max-width: 640px) {
   .op-section-desc { display: none; }
-  .op-sticky-pill { padding: 0 12px; }
-  .op-sticky-val { font-size: 12px; }
-  .op-calc-btn { padding: 0 18px; font-size: 10px; }
+  .op-sticky-pill { padding: 0 10px; }
+  .op-sticky-lbl { font-size: 8px; }
+  .op-sticky-val { font-size: 11px; }
+  .op-sticky { padding: 10px 16px; }
+  .op-sticky-inner { flex-wrap: wrap; gap: 6px; }
+  .op-sticky-preview { flex: 1; }
+  .op-action-btns { width: 100%; }
+  .op-refresh-btn { display: none; }
+  .op-calc-btn { width: 100%; justify-content: center; padding: 0 18px; font-size: 10px; }
 }
 </style>
 </head>
@@ -879,6 +889,31 @@ window.exportPDF = function() {
   document.body.classList.remove('printing-result');
   document.title = prev;
 };
+
+// Fix tooltip clipping: reposition as position:fixed to bypass overflow:hidden ancestors
+(function(){
+  const BOX_W = 220, MARGIN = 10;
+  document.addEventListener('mouseenter', function(e) {
+    const tip = e.target.closest('.tip');
+    if (!tip) return;
+    const box = tip.querySelector('.tip-box');
+    if (!box) return;
+    const r = tip.getBoundingClientRect();
+    let left = r.left + r.width / 2 - BOX_W / 2;
+    left = Math.max(MARGIN, Math.min(left, window.innerWidth - BOX_W - MARGIN));
+    const bottom = window.innerHeight - r.top + 8;
+    box.style.position = 'fixed';
+    box.style.left = left + 'px';
+    box.style.bottom = bottom + 'px';
+    box.style.transform = 'none';
+  }, true);
+  document.addEventListener('mouseleave', function(e) {
+    const tip = e.target.closest('.tip');
+    if (!tip) return;
+    const box = tip.querySelector('.tip-box');
+    if (box) { box.style.position = ''; box.style.left = ''; box.style.bottom = ''; box.style.transform = ''; }
+  }, true);
+})();
 
 // Patch renderResult: suppress step6 show + scroll-to-top, use opResult instead
 (function(){

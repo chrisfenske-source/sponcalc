@@ -286,7 +286,7 @@ select option { background: var(--white); }
   width: 220px; background: var(--slate-900); border-radius: var(--radius-md);
   padding: 10px 12px; font-size: 12px; font-weight: 400;
   color: rgba(255,255,255,0.9); text-transform: none; letter-spacing: 0; line-height: 1.5;
-  opacity: 0; pointer-events: none; transition: all 0.15s; z-index: 200;
+  opacity: 0; pointer-events: none; transition: all 0.15s; z-index: 1000;
   font-family: var(--font-body); box-shadow: var(--shadow-lg); white-space: normal;
 }
 .tip-box::after {
