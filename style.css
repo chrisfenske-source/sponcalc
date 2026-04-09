@@ -279,7 +279,7 @@ select option { background: var(--white); }
   font-family: var(--font-mono); font-size: 9px; font-weight: 700;
   color: var(--text-muted); cursor: help; position: relative; flex-shrink: 0;
 }
-.tip:hover .tip-box { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+.tip:hover .tip-box, .tip.tip-open .tip-box { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
 .tip-box {
   position: absolute; left: 50%; bottom: calc(100% + 8px);
   transform: translateX(-50%) translateY(4px);

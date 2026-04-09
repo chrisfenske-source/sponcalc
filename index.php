@@ -893,9 +893,8 @@ window.exportPDF = function() {
 // Fix tooltip clipping: reposition as position:fixed to bypass overflow:hidden ancestors
 (function(){
   const BOX_W = 220, MARGIN = 10;
-  document.addEventListener('mouseenter', function(e) {
-    const tip = e.target.closest('.tip');
-    if (!tip) return;
+
+  function positionBox(tip) {
     const box = tip.querySelector('.tip-box');
     if (!box) return;
     const r = tip.getBoundingClientRect();
@@ -906,13 +905,46 @@ window.exportPDF = function() {
     box.style.left = left + 'px';
     box.style.bottom = bottom + 'px';
     box.style.transform = 'none';
+  }
+
+  function resetBox(tip) {
+    const box = tip.querySelector('.tip-box');
+    if (box) { box.style.position = ''; box.style.left = ''; box.style.bottom = ''; box.style.transform = ''; }
+  }
+
+  // Mouse
+  document.addEventListener('mouseenter', function(e) {
+    const tip = e.target.closest('.tip');
+    if (tip) positionBox(tip);
   }, true);
   document.addEventListener('mouseleave', function(e) {
     const tip = e.target.closest('.tip');
-    if (!tip) return;
-    const box = tip.querySelector('.tip-box');
-    if (box) { box.style.position = ''; box.style.left = ''; box.style.bottom = ''; box.style.transform = ''; }
+    if (tip) resetBox(tip);
   }, true);
+
+  // Touch: tap icon → show; tap elsewhere → hide
+  let activeTip = null;
+  document.addEventListener('touchstart', function(e) {
+    const tip = e.target.closest('.tip');
+    if (tip) {
+      e.preventDefault();
+      if (activeTip && activeTip !== tip) {
+        activeTip.classList.remove('tip-open');
+        resetBox(activeTip);
+      }
+      const isOpen = tip.classList.contains('tip-open');
+      tip.classList.toggle('tip-open', !isOpen);
+      if (!isOpen) positionBox(tip);
+      else resetBox(tip);
+      activeTip = isOpen ? null : tip;
+    } else {
+      if (activeTip) {
+        activeTip.classList.remove('tip-open');
+        resetBox(activeTip);
+        activeTip = null;
+      }
+    }
+  }, {passive: false});
 })();
 
 // Patch renderResult: suppress step6 show + scroll-to-top, use opResult instead
