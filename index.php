@@ -271,7 +271,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="logo-wrap">
       <img src="images/logo.png" alt="uhlsport" class="logo-img">
       <div class="header-divider"></div>
-      <span class="header-tool">Kalkulation Ausrüstungsverträge</span>
+      <span class="header-tool" data-i18n="header.tool">Kalkulation Ausrüstungsverträge</span>
+    </div>
+    <div class="lang-switch">
+      <button class="lang-btn active" data-lang="de" onclick="setLang('de')">DE</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLang('fr')">FR</button>
+      <button class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLang('nl')">NL</button>
     </div>
     <span class="header-date" id="headerDate"></span>
   </header>
@@ -280,126 +287,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="op-section" id="sec1">
     <div class="op-section-header" onclick="toggleSection(1)">
       <div class="op-section-num">01</div>
-      <div class="op-section-title">Allgemeine Informationen</div>
-      <div class="op-section-desc">Verein, Fachhändler, interne Ansprechpartner</div>
+      <div class="op-section-title" data-i18n="sec1.title">Allgemeine Informationen</div>
+      <div class="op-section-desc" data-i18n="sec1.desc">Verein, Fachhändler, interne Ansprechpartner</div>
       <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="op-section-body" id="sec1-body">
       <div class="field-grid" style="margin-bottom:8px">
         <div class="field-group">
-          <div class="field-label">Steuersatz Markt (%) <span class="tip">i<span class="tip-box">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Berechnung: (UVP − Rabatt) ÷ (1 + Steuersatz).</span></span></div>
+          <div class="field-label"><span data-i18n="field.steuer">Steuersatz Markt (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.steuer">Mehrwertsteuer-Satz in %. Nur relevant bei UVP-Berechnungen. Berechnung: (UVP − Rabatt) ÷ (1 + Steuersatz).</span></span></div>
           <input type="number" id="steuer" value="0" step="0.1" min="0" max="100" placeholder="0">
-          <span class="field-hint">z.B. 19 für 19% MwSt</span>
+          <span class="field-hint" data-i18n="hint.steuer">z.B. 19 für 19% MwSt</span>
         </div>
       </div>
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Verein</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.verein">Verein</div><div class="section-head-line"></div></div>
       <div class="field-grid">
         <div class="field-group">
-          <div class="field-label">Name Verein <span class="tip">i<span class="tip-box">Vollständiger Name des Vereins, mit dem ein Ausrüstungsvertrag abgeschlossen werden soll.</span></span></div>
-          <input type="text" id="vereinName" placeholder="z. B. FC Musterstadt">
-          <span class="err-msg" id="err_vereinName">Pflichtfeld</span>
+          <div class="field-label"><span data-i18n="field.vereinName">Name Verein</span> <span class="tip">i<span class="tip-box" data-i18n="tip.vereinName">Vollständiger Name des Vereins, mit dem ein Ausrüstungsvertrag abgeschlossen werden soll.</span></span></div>
+          <input type="text" id="vereinName" placeholder="z. B. FC Musterstadt" data-i18n-placeholder="ph.vereinName">
+          <span class="err-msg" id="err_vereinName" data-i18n="err.required">Pflichtfeld</span>
         </div>
         <div class="field-group">
-          <div class="field-label">Liga <span class="tip">i<span class="tip-box">Aktuelle Spielklasse des Vereins – relevant für Sichtbarkeit und Umsatzpotenzial.</span></span></div>
-          <input type="text" id="liga" placeholder="Bundesliga">
-          <span class="err-msg" id="err_liga">Pflichtfeld</span>
+          <div class="field-label"><span data-i18n="field.liga">Liga</span> <span class="tip">i<span class="tip-box" data-i18n="tip.liga">Aktuelle Spielklasse des Vereins – relevant für Sichtbarkeit und Umsatzpotenzial.</span></span></div>
+          <input type="text" id="liga" placeholder="Bundesliga" data-i18n-placeholder="ph.liga">
+          <span class="err-msg" id="err_liga" data-i18n="err.required">Pflichtfeld</span>
         </div>
         <div class="field-group">
-          <div class="field-label">Sportart</div>
-          <input type="text" id="sportart" placeholder="z. B. Fußball">
+          <div class="field-label" data-i18n="field.sportart">Sportart</div>
+          <input type="text" id="sportart" placeholder="z. B. Fußball" data-i18n-placeholder="ph.sportart">
         </div>
         <div class="field-group">
-          <div class="field-label">Kundennr. Freiware</div>
-          <input type="text" id="kdnrVereinFreiware" placeholder="z. B. 123456">
+          <div class="field-label" data-i18n="field.kdnrFreiware">Kundennr. Freiware</div>
+          <input type="text" id="kdnrVereinFreiware" placeholder="z. B. 123456" data-i18n-placeholder="ph.kdnr">
         </div>
         <div class="field-group">
-          <div class="field-label">Kundennr. Nachkauf</div>
-          <input type="text" id="kdnrVereinNachkauf" placeholder="z. B. 123456">
+          <div class="field-label" data-i18n="field.kdnrNachkauf">Kundennr. Nachkauf</div>
+          <input type="text" id="kdnrVereinNachkauf" placeholder="z. B. 123456" data-i18n-placeholder="ph.kdnr">
         </div>
         <div class="field-group">
-          <div class="field-label">Nachkauf-Kondition Verein (%) <span class="tip">i<span class="tip-box">Rabatt des Vereins in Prozent, z.B. 10 für 10%.</span></span></div>
+          <div class="field-label"><span data-i18n="field.vereinNachkauf">Nachkauf-Kondition Verein (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.vereinNachkauf">Rabatt des Vereins in Prozent, z.B. 10 für 10%.</span></span></div>
           <input type="number" id="vereinNachkauf" value="0" step="1" min="0" max="100" placeholder="0">
         </div>
         <div class="field-group">
-          <div class="field-label">Erlösschmälerungen Verein (%) <span class="tip">i<span class="tip-box">Skonto, Boni etc. in Prozent, z.B. 5 für 5%.</span></span></div>
+          <div class="field-label"><span data-i18n="field.vereinErloess">Erlösschmälerungen Verein (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.vereinErloess">Skonto, Boni etc. in Prozent, z.B. 5 für 5%.</span></span></div>
           <input type="number" id="vereinErloesschmaelerung" value="0" step="1" min="0" max="100" placeholder="0">
         </div>
       </div>
       <div class="field-grid">
         <div class="field-group span-2">
-          <div class="field-label">Bewertungsgrundlage Vereinsumsatz</div>
+          <div class="field-label" data-i18n="field.bewertungVerein">Bewertungsgrundlage Vereinsumsatz</div>
           <div class="mode-toggle" id="verein_mode_toggle">
-            <button onclick="setGlobalMode('verein','hek',this)">Zu HEK</button>
-            <button class="on" onclick="setGlobalMode('verein','uvp',this)">Zu UVP</button>
+            <button onclick="setGlobalMode('verein','hek',this)" data-i18n="btn.zuHEK">Zu HEK</button>
+            <button class="on" onclick="setGlobalMode('verein','uvp',this)" data-i18n="btn.zuUVP">Zu UVP</button>
           </div>
         </div>
       </div>
 
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Fachhändler</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.haendler">Fachhändler</div><div class="section-head-line"></div></div>
       <div class="field-grid">
         <div class="field-group">
-          <div class="field-label">Name Fachhändler</div>
-          <input type="text" id="haendlerName" placeholder="z. B. Teamworld">
+          <div class="field-label" data-i18n="field.haendlerName">Name Fachhändler</div>
+          <input type="text" id="haendlerName" placeholder="z. B. Teamworld" data-i18n-placeholder="ph.haendlerName">
         </div>
         <div class="field-group">
-          <div class="field-label">Kundennr. Fachhändler</div>
-          <input type="text" id="kdnrHaendler" placeholder="z. B. 123456">
+          <div class="field-label" data-i18n="field.kdnrHaendler">Kundennr. Fachhändler</div>
+          <input type="text" id="kdnrHaendler" placeholder="z. B. 123456" data-i18n-placeholder="ph.kdnr">
         </div>
         <div class="field-group">
-          <div class="field-label">Nachkauf-Kondition Händler (%) <span class="tip">i<span class="tip-box">Standard: 30%</span></span></div>
+          <div class="field-label"><span data-i18n="field.haendlerNachkauf">Nachkauf-Kondition Händler (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.haendlerNachkauf">Standard: 30%</span></span></div>
           <input type="number" id="haendlerNachkauf" value="30" step="1" min="0" max="100" placeholder="0">
-          <span class="err-msg" id="err_haendlerNachkauf">Wert zwischen 0 und 100</span>
+          <span class="err-msg" id="err_haendlerNachkauf" data-i18n="err.range">Wert zwischen 0 und 100</span>
         </div>
         <div class="field-group">
-          <div class="field-label">Einkauf Freiware Händler (%) <span class="tip">i<span class="tip-box">Standard: 40%</span></span></div>
+          <div class="field-label"><span data-i18n="field.haendlerFreiware">Einkauf Freiware Händler (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.haendlerFreiware">Standard: 40%</span></span></div>
           <input type="number" id="haendlerFreiware" value="40" step="1" min="0" max="100" placeholder="0">
-          <span class="err-msg" id="err_haendlerFreiware">Wert zwischen 0 und 100</span>
+          <span class="err-msg" id="err_haendlerFreiware" data-i18n="err.range">Wert zwischen 0 und 100</span>
         </div>
         <div class="field-group">
-          <div class="field-label">Erlösschmälerungen Händler (%) <span class="tip">i<span class="tip-box">Standard: 8%</span></span></div>
+          <div class="field-label"><span data-i18n="field.haendlerErloess">Erlösschmälerungen Händler (%)</span> <span class="tip">i<span class="tip-box" data-i18n="tip.haendlerErloess">Standard: 8%</span></span></div>
           <input type="number" id="haendlerErloesschmaelerung" value="8" step="1" min="0" max="100" placeholder="0">
-          <span class="err-msg" id="err_haendlerErloesschmaelerung">Wert zwischen 0 und 100</span>
+          <span class="err-msg" id="err_haendlerErloesschmaelerung" data-i18n="err.range">Wert zwischen 0 und 100</span>
         </div>
       </div>
       <div class="field-grid">
         <div class="field-group span-2">
-          <div class="field-label">Bewertungsgrundlage Händlerumsatz</div>
+          <div class="field-label" data-i18n="field.bewertungHaendler">Bewertungsgrundlage Händlerumsatz</div>
           <div class="mode-toggle" id="haendler_mode_toggle">
-            <button class="on" onclick="setGlobalMode('haendler','hek',this)">Zu HEK</button>
-            <button onclick="setGlobalMode('haendler','uvp',this)">Zu UVP</button>
+            <button class="on" onclick="setGlobalMode('haendler','hek',this)" data-i18n="btn.zuHEK">Zu HEK</button>
+            <button onclick="setGlobalMode('haendler','uvp',this)" data-i18n="btn.zuUVP">Zu UVP</button>
           </div>
         </div>
       </div>
 
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Sponsoring</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.sponsoring">Sponsoring</div><div class="section-head-line"></div></div>
       <div class="field-grid">
         <div class="field-group span-2">
-          <div class="field-label">Bewertungsgrundlage Sponsoring-Freiware</div>
+          <div class="field-label" data-i18n="field.bewertungSponsoring">Bewertungsgrundlage Sponsoring-Freiware</div>
           <div class="mode-toggle" id="sponsoring_mode_toggle">
-            <button class="on" onclick="setGlobalMode('sponsoring','hek',this)">Zu HEK</button>
-            <button onclick="setGlobalMode('sponsoring','uvp',this)">Zu UVP</button>
+            <button class="on" onclick="setGlobalMode('sponsoring','hek',this)" data-i18n="btn.zuHEK">Zu HEK</button>
+            <button onclick="setGlobalMode('sponsoring','uvp',this)" data-i18n="btn.zuUVP">Zu UVP</button>
           </div>
         </div>
       </div>
 
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Intern</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.intern">Intern</div><div class="section-head-line"></div></div>
       <div class="field-grid">
         <div class="field-group">
-          <div class="field-label">Außendienst</div>
-          <input type="text" id="aussendienst" placeholder="z. B. Max Mustermann">
+          <div class="field-label" data-i18n="field.aussendienst">Außendienst</div>
+          <input type="text" id="aussendienst" placeholder="z. B. Max Mustermann" data-i18n-placeholder="ph.person">
         </div>
         <div class="field-group">
-          <div class="field-label">Umsatzverantwortliche Person</div>
-          <input type="text" id="verantwortlich" placeholder="z. B. Max Mustermann">
+          <div class="field-label" data-i18n="field.verantwortlich">Umsatzverantwortliche Person</div>
+          <input type="text" id="verantwortlich" placeholder="z. B. Max Mustermann" data-i18n-placeholder="ph.person">
         </div>
         <div class="field-group">
-          <div class="field-label">Laufzeit <span class="tip">i<span class="tip-box">Pro Jahr wird ein eigener Abschnitt für Sponsoring und Umsatz angelegt.</span></span></div>
+          <div class="field-label"><span data-i18n="field.laufzeit">Laufzeit</span> <span class="tip">i<span class="tip-box" data-i18n="tip.laufzeit">Pro Jahr wird ein eigener Abschnitt für Sponsoring und Umsatz angelegt.</span></span></div>
           <select id="laufzeit" onchange="onLaufzeitChange()">
-            <option value="1">1 Jahr</option>
-            <option value="2">2 Jahre</option>
-            <option value="3" selected>3 Jahre</option>
-            <option value="4">4 Jahre</option>
-            <option value="5">5 Jahre</option>
+            <option value="1" data-i18n="opt.1year">1 Jahr</option>
+            <option value="2" data-i18n="opt.2years">2 Jahre</option>
+            <option value="3" selected data-i18n="opt.3years">3 Jahre</option>
+            <option value="4" data-i18n="opt.4years">4 Jahre</option>
+            <option value="5" data-i18n="opt.5years">5 Jahre</option>
           </select>
         </div>
       </div>
@@ -411,26 +418,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="op-section collapsed" id="sec2">
     <div class="op-section-header" onclick="toggleSection(2)">
       <div class="op-section-num">02</div>
-      <div class="op-section-title">Interne Quotienten</div>
-      <div class="op-section-desc">COS / HEK / UVP Umrechnungsfaktoren</div>
+      <div class="op-section-title" data-i18n="sec2.title">Interne Quotienten</div>
+      <div class="op-section-desc" data-i18n="sec2.desc">COS / HEK / UVP Umrechnungsfaktoren</div>
       <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="op-section-body" id="sec2-body" style="max-height:0;padding-top:0;padding-bottom:0">
       <div class="lock-box">
         <input type="checkbox" id="quotientUnlock" onchange="toggleQuotientLock()">
-        <label for="quotientUnlock">Ich bestätige, dass ich die internen Quotienten ändern darf und dies <strong>mit dem zuständigen Controlling abgestimmt</strong> habe.</label>
+        <label for="quotientUnlock" data-i18n-html="field.quotientUnlock">Ich bestätige, dass ich die internen Quotienten ändern darf und dies <strong>mit dem zuständigen Controlling abgestimmt</strong> habe.</label>
       </div>
       <div class="quotient-fields" id="quotientFields">
         <div class="field-grid">
           <div class="field-group">
-            <div class="field-label">HEK / COS Quotient <span class="tip">i<span class="tip-box">Standard: 2.5 → HEK = 2,5 × COS.</span></span></div>
+            <div class="field-label"><span data-i18n="field.hekCos">HEK / COS Quotient</span> <span class="tip">i<span class="tip-box" data-i18n="tip.hekCos">Standard: 2.5 → HEK = 2,5 × COS.</span></span></div>
             <input type="number" id="hekCosQuotient" value="2.5" step="0.1" min="1">
-            <span class="field-hint">Standard: 2.5</span>
+            <span class="field-hint" data-i18n="hint.standard25">Standard: 2.5</span>
           </div>
           <div class="field-group">
-            <div class="field-label">UVP / COS Quotient <span class="tip">i<span class="tip-box">Standard: 5.0 → UVP = 5 × COS.</span></span></div>
+            <div class="field-label"><span data-i18n="field.uvpCos">UVP / COS Quotient</span> <span class="tip">i<span class="tip-box" data-i18n="tip.uvpCos">Standard: 5.0 → UVP = 5 × COS.</span></span></div>
             <input type="number" id="uvpCosQuotient" value="5.0" step="0.1" min="1">
-            <span class="field-hint">Standard: 5.0</span>
+            <span class="field-hint" data-i18n="hint.standard50">Standard: 5.0</span>
           </div>
         </div>
       </div>
@@ -441,35 +448,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="op-section collapsed" id="sec3">
     <div class="op-section-header" onclick="toggleSection(3)">
       <div class="op-section-num">03</div>
-      <div class="op-section-title">Qualitative Beurteilung</div>
-      <div class="op-section-desc">Strategische Einschätzungen zu Verein & Händler</div>
+      <div class="op-section-title" data-i18n="sec3.title">Qualitative Beurteilung</div>
+      <div class="op-section-desc" data-i18n="sec3.desc">Strategische Einschätzungen zu Verein & Händler</div>
       <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="op-section-body" id="sec3-body" style="max-height:0;padding-top:0;padding-bottom:0">
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Verein</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.verein">Verein</div><div class="section-head-line"></div></div>
       <div class="field-grid cols-1">
         <div class="field-group">
-          <div class="field-label">Qualitative Beurteilung Verein</div>
-          <textarea id="qualVerein" placeholder="z.B. Aufsteiger in die 1. Liga, starke Social-Media-Präsenz..."></textarea>
+          <div class="field-label" data-i18n="field.qualVerein">Qualitative Beurteilung Verein</div>
+          <textarea id="qualVerein" placeholder="z.B. Aufsteiger in die 1. Liga, starke Social-Media-Präsenz..." data-i18n-placeholder="ph.qualVerein"></textarea>
         </div>
         <div class="field-group">
-          <div class="field-label">Warum dieser Verein?</div>
-          <textarea id="warumVerein" placeholder="z.B. Bundesliga-Aufsteiger mit großer Medienpräsenz..."></textarea>
+          <div class="field-label" data-i18n="field.warumVerein">Warum dieser Verein?</div>
+          <textarea id="warumVerein" placeholder="z.B. Bundesliga-Aufsteiger mit großer Medienpräsenz..." data-i18n-placeholder="ph.warumVerein"></textarea>
         </div>
       </div>
-      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Fachhandel</div><div class="section-head-line"></div></div>
+      <div class="section-head"><div class="section-head-line"></div><div class="section-head-label" data-i18n="head.fachhandel">Fachhandel</div><div class="section-head-line"></div></div>
       <div class="field-grid cols-1">
         <div class="field-group">
-          <div class="field-label">Qualitative Beurteilung Fachhandel</div>
-          <textarea id="qualHandel" placeholder="z.B. Langjähriger Partner, hohe Beratungskompetenz..."></textarea>
+          <div class="field-label" data-i18n="field.qualHandel">Qualitative Beurteilung Fachhandel</div>
+          <textarea id="qualHandel" placeholder="z.B. Langjähriger Partner, hohe Beratungskompetenz..." data-i18n-placeholder="ph.qualHandel"></textarea>
         </div>
         <div class="field-group">
-          <div class="field-label">Andere Vereine beim Händler?</div>
-          <textarea id="andereVereine" placeholder="z.B. TSV Beispielstadt (Landesliga)..."></textarea>
+          <div class="field-label" data-i18n="field.andereVereine">Andere Vereine beim Händler?</div>
+          <textarea id="andereVereine" placeholder="z.B. TSV Beispielstadt (Landesliga)..." data-i18n-placeholder="ph.andereVereine"></textarea>
         </div>
         <div class="field-group">
-          <div class="field-label">Zusätzliche Umsatzpotenziale?</div>
-          <textarea id="umsatzPotenziale" placeholder="z.B. Mitglieder-Aktionen geplant..."></textarea>
+          <div class="field-label" data-i18n="field.umsatzPotenziale">Zusätzliche Umsatzpotenziale?</div>
+          <textarea id="umsatzPotenziale" placeholder="z.B. Mitglieder-Aktionen geplant..." data-i18n-placeholder="ph.umsatzPotenziale"></textarea>
         </div>
       </div>
     </div>
@@ -479,8 +486,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="op-section collapsed" id="sec4">
     <div class="op-section-header" onclick="toggleSection(4)">
       <div class="op-section-num">04</div>
-      <div class="op-section-title">Sponsoring-Leistungen</div>
-      <div class="op-section-desc">Cash & Freiware pro Vertragsjahr</div>
+      <div class="op-section-title" data-i18n="sec4.title">Sponsoring-Leistungen</div>
+      <div class="op-section-desc" data-i18n="sec4.desc">Cash & Freiware pro Vertragsjahr</div>
       <svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="op-section-body" id="sec4-body" style="max-height:0;padding-top:0;padding-bottom:0">
@@ -493,8 +500,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div id="umsatzSection">
     <div class="umsatz-group-headline">
       <div class="op-section-num" style="background:var(--primary);color:var(--white)">05</div>
-      <span class="umsatz-group-title">Umsatzplanung</span>
-      <span class="umsatz-group-desc">Verein direkt, Händler direkt & indirekt</span>
+      <span class="umsatz-group-title" data-i18n="sec5.title">Umsatzplanung</span>
+      <span class="umsatz-group-desc" data-i18n="sec5.desc">Verein direkt, Händler direkt & indirekt</span>
     </div>
     <div id="umsatzYearAccordionsContainer"></div>
   </div>
@@ -503,7 +510,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div id="opResultWrapper" style="display:none">
     <div class="umsatz-group-headline" style="margin-top:24px">
       <div class="op-section-num" style="background:var(--primary);color:var(--white)">06</div>
-      <span class="umsatz-group-title">Ergebnis</span>
+      <span class="umsatz-group-title" data-i18n="sec6.title">Ergebnis</span>
     </div>
     <div class="op-result" id="opResult">
       <div class="op-result-body">
@@ -511,11 +518,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div style="padding:0 24px 24px;display:flex;flex-direction:column;gap:8px">
           <button class="pdf-btn" onclick="exportPDF()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Kalkulation als PDF speichern
+            <span data-i18n="btn.pdf">Kalkulation als PDF speichern</span>
           </button>
           <button class="email-btn" onclick="openEmailModal()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
-            Auswertung per E-Mail senden
+            <span data-i18n="btn.email">Auswertung per E-Mail senden</span>
           </button>
         </div>
       </div>
@@ -533,30 +540,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="op-sticky-inner">
     <div class="op-sticky-preview">
       <div class="op-sticky-pill">
-        <span class="op-sticky-lbl">Nettoumsatz</span>
+        <span class="op-sticky-lbl" data-i18n="lbl.nettoumsatz">Nettoumsatz</span>
         <span class="op-sticky-val" id="liveNetto">–</span>
       </div>
       <div class="op-sticky-pill">
-        <span class="op-sticky-lbl">Invest</span>
+        <span class="op-sticky-lbl" data-i18n="lbl.invest">Invest</span>
         <span class="op-sticky-val" id="liveInvest">–</span>
       </div>
       <div class="op-sticky-pill">
-        <span class="op-sticky-lbl">Deckungsbeitrag</span>
+        <span class="op-sticky-lbl" data-i18n="lbl.deckungsbeitrag">Deckungsbeitrag</span>
         <span class="op-sticky-val" id="liveDB">–</span>
       </div>
       <div class="op-sticky-pill">
-        <span class="op-sticky-lbl">DB-Quote</span>
+        <span class="op-sticky-lbl" data-i18n="lbl.dbQuote">DB-Quote</span>
         <span class="op-sticky-val" id="liveDBQ">–</span>
       </div>
     </div>
     <div class="op-action-btns">
-      <button class="op-refresh-btn" onclick="opRefreshLive()" title="Live-Werte neu berechnen">
+      <button class="op-refresh-btn" onclick="opRefreshLive()" data-i18n-title="btn.refresh.title" title="Live-Werte neu berechnen">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-        Aktualisieren
+        <span data-i18n="btn.refresh">Aktualisieren</span>
       </button>
       <button class="op-calc-btn" onclick="opBerechnen()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Kalkulation berechnen
+        <span data-i18n="btn.calculate">Kalkulation berechnen</span>
       </button>
     </div>
   </div>
@@ -567,28 +574,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div class="email-modal" onclick="event.stopPropagation()">
     <div class="email-modal-title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="vertical-align:-2px;margin-right:8px"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
-      Auswertung per E-Mail senden
+      <span data-i18n="email.title">Auswertung per E-Mail senden</span>
     </div>
-    <p class="email-modal-sub">Die Kalkulation wird als formatierte E-Mail zugestellt. Mehrere Adressen mit Enter oder Komma bestätigen.</p>
+    <p class="email-modal-sub" data-i18n="email.sub">Die Kalkulation wird als formatierte E-Mail zugestellt. Mehrere Adressen mit Enter oder Komma bestätigen.</p>
     <div class="email-modal-fixed">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Immer im BCC: <span>cfenske@uhlsport.de</span>
+      <span data-i18n="email.bcc">Immer im BCC:</span> <span>cfenske@uhlsport.de</span>
     </div>
     <div class="email-tag-input" id="emailTagInput" onclick="document.getElementById('emailRawInput').focus()">
-      <input type="text" id="emailRawInput" class="email-tag-input-field" placeholder="E-Mail-Adresse eingeben …" autocomplete="off" spellcheck="false">
+      <input type="text" id="emailRawInput" class="email-tag-input-field" placeholder="E-Mail-Adresse eingeben …" data-i18n-placeholder="ph.email" autocomplete="off" spellcheck="false">
     </div>
-    <div class="email-modal-hint">Enter oder Komma = Adresse hinzufügen · Klick auf × = entfernen</div>
+    <div class="email-modal-hint" data-i18n="email.hint">Enter oder Komma = Adresse hinzufügen · Klick auf × = entfernen</div>
     <div class="email-modal-err" id="emailErr"></div>
     <div class="email-modal-actions">
-      <button class="email-cancel-btn" onclick="closeEmailModal()">Abbrechen</button>
+      <button class="email-cancel-btn" onclick="closeEmailModal()" data-i18n="btn.cancel">Abbrechen</button>
       <button class="email-send-btn" id="emailSendBtn" onclick="sendEmail()">
         <div class="spinner"></div>
-        <span class="send-label">Jetzt senden</span>
+        <span class="send-label" data-i18n="btn.send">Jetzt senden</span>
       </button>
     </div>
   </div>
 </div>
 
+<script src="translations.js"></script>
 <script src="app.js"></script>
 <script>
 // ── ONE-PAGE SPECIFIC LOGIC ──
@@ -625,12 +633,8 @@ function toggleSection(n) {
 
 // Expand all sections initially after a short delay (so scrollHeight is correct)
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('headerDate').textContent =
-    new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
   initYearsFresh(3);
-  buildLigaLabelSection();
-  buildSponsoringUI();
-  buildUmsatzUI();
+  applyTranslations();
   // Expand section 1 (already open), keep others collapsed
   const sec1body = document.getElementById('sec1-body');
   sec1body.style.maxHeight = sec1body.scrollHeight + 'px';
@@ -794,7 +798,7 @@ function opRenderResult() {
 }
 
 function opUpdateSticky(netto, invest, db, dbq) {
-  const fmtK2 = n => new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+  const fmtK2 = n => new Intl.NumberFormat(getLocale(),{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
   const setV = (id, val, cls) => {
     const el = document.getElementById(id);
     if (!el) return;

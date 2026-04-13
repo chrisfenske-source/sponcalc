@@ -12,7 +12,7 @@ const state={
 let currentStep=1, maxVisited=1;
 
 // Date
-document.getElementById('headerDate').textContent=new Date().toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+// Date set by applyTranslations()
 
 function toggleQuotientLock(){
   document.getElementById('quotientFields').classList.toggle('unlocked',document.getElementById('quotientUnlock').checked);
@@ -212,11 +212,11 @@ function buildSponsoringPanel(i,yr){
   const isHek=spMode==='hek';
   return`<div class="field-grid" style="margin-top:20px">
     <div class="field-group">
-      <div class="field-label">Cash-Leistung (€) <span class="tip">i<span class="tip-box">Direkter Geldbetrag, den uhlsport dem Verein zahlt. Absolutbetrag eingeben.</span></span></div>
+      <div class="field-label">${t('sp.cash')} <span class="tip">i<span class="tip-box">${t('tip.spCash')}</span></span></div>
       <input type="number" id="sp_cash_${i}" value="${yr.cash}" min="0" placeholder="0">
     </div>
     <div class="field-group" id="sp_freiware_group_${i}">
-      <div class="field-label">Freiware zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Wert der Freiware zum ${isHek?'Händlereinkaufspreis (HEK)':'Endkundenpreis (UVP)'}. Absolutbetrag eingeben.</span></span></div>
+      <div class="field-label">${isHek?t('sp.freiwareHEK'):t('sp.freiwareUVP')} <span class="tip">i<span class="tip-box">${isHek?t('tip.spFreiwareHEK'):t('tip.spFreiwareUVP')}</span></span></div>
       <input type="number" id="sp_freiwareHek_${i}" value="${yr.freiwareHek}" min="0" placeholder="0" ${isHek?'':'style="display:none"'}>
       <input type="number" id="sp_freiwareUvp_${i}" value="${yr.freiwareUvp}" min="0" placeholder="0" ${isHek?'style="display:none"':''}>
     </div>
@@ -234,10 +234,10 @@ function buildUmsatzUI(){
   container.innerHTML='';
   const chev=`<svg class="op-section-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><polyline points="6 9 12 15 18 9"/></svg>`;
   const cats=[
-    {key:'verein',    num:'01', title:'Verein — Direkter Nachkauf',      desc:'Direkter Nachkauf des Vereins',        build:buildUmsatzVereinPanel},
-    {key:'hdirekt',   num:'02', title:'Fachhändler — Direktumsatz',      desc:'Direktumsatz & Freiware',              build:buildUmsatzHdirektPanel},
-    {key:'hindirekt', num:'03', title:'Fachhändler — Indirekter Umsatz', desc:'Indirekter Händlerumsatz',             build:buildUmsatzHindirektPanel},
-    {key:'sonstige',  num:'04', title:'Sonstige Kosten',                  desc:'Marketing, Logistik & weitere Kosten', build:buildUmsatzSonstigePanel},
+    {key:'verein',    num:'01', title:t('cat.verein.title'),    desc:t('cat.verein.desc'),    build:buildUmsatzVereinPanel},
+    {key:'hdirekt',   num:'02', title:t('cat.hdirekt.title'),   desc:t('cat.hdirekt.desc'),   build:buildUmsatzHdirektPanel},
+    {key:'hindirekt', num:'03', title:t('cat.hindirekt.title'), desc:t('cat.hindirekt.desc'), build:buildUmsatzHindirektPanel},
+    {key:'sonstige',  num:'04', title:t('cat.sonstige.title'),  desc:t('cat.sonstige.desc'),  build:buildUmsatzSonstigePanel},
   ];
   cats.forEach(cat=>{
     const panels=state.years.map((yr,i)=>`
@@ -302,17 +302,17 @@ function buildUmsatzVereinPanel(i,yr){
   return`
   <div class="field-grid">
     <div class="field-group">
-      <div class="field-label">Umsatz Verein zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Erwarteter Bruttoumsatz des Vereins zum ${isHek?'HEK':'UVP'}. Davon werden Vereins-Rabatt, Erlösschmälerungen und Wareneinsatz abgezogen.</span></span></div>
+      <div class="field-label">${isHek?t('um.vereinHEK'):t('um.vereinUVP')} <span class="tip">i<span class="tip-box">${isHek?t('tip.umVereinHEK'):t('tip.umVereinUVP')}</span></span></div>
       <input type="number" id="um_vereinHek_${i}" value="${yr.vereinUmsatzHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
       <input type="number" id="um_vereinUvp_${i}" value="${yr.vereinUmsatzUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
   </div>
   <div class="calc-preview" id="prev_verein_${i}">
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_verein_rabatt_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_verein_erloess_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_verein_netto_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_verein_cos_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_verein_db_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.rabatt')}</div><div class="calc-preview-val neg" id="prev_verein_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.erloess')}</div><div class="calc-preview-val neg" id="prev_verein_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.netto')}</div><div class="calc-preview-val pos" id="prev_verein_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.cos')}</div><div class="calc-preview-val neg" id="prev_verein_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.db1')}</div><div class="calc-preview-val" id="prev_verein_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzHdirektPanel(i,yr){
@@ -321,21 +321,21 @@ function buildUmsatzHdirektPanel(i,yr){
   return`
   <div class="field-grid">
     <div class="field-group">
-      <div class="field-label">Händler-Direkt zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Umsatz des Fachhändlers mit dem Verein zu ${isHek?'HEK':'UVP'}. Abzüge: Nachkauf-Rabatt und Erlösschmälerungen.</span></span></div>
+      <div class="field-label">${isHek?t('um.hdirektHEK'):t('um.hdirektUVP')} <span class="tip">i<span class="tip-box">${isHek?t('tip.umHdirektHEK'):t('tip.umHdirektUVP')}</span></span></div>
       <input type="number" id="um_hdirektHek_${i}" value="${yr.haendlerDirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
       <input type="number" id="um_hdirektUvp_${i}" value="${yr.haendlerDirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
     <div class="field-group">
-      <div class="field-label">Freiware Händler → Verein (HEK, €) <span class="tip">i<span class="tip-box">Ware, die der Händler aus seinem Freiwarenkontingent kostenlos an den Verein weitergibt. Bewertet zu HEK.</span></span></div>
+      <div class="field-label">${t('um.haendlerFreiwareHEK')} <span class="tip">i<span class="tip-box">${t('tip.haendlerFreiwareHEK')}</span></span></div>
       <input type="number" id="um_haendlerFreiwareHek_${i}" value="${yr.haendlerFreiwareHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})">
     </div>
   </div>
   <div class="calc-preview" id="prev_hdirekt_${i}">
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hd_rabatt_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hd_erloess_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hd_netto_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hd_cos_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_hd_db_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.rabatt')}</div><div class="calc-preview-val neg" id="prev_hd_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.erloess')}</div><div class="calc-preview-val neg" id="prev_hd_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.netto')}</div><div class="calc-preview-val pos" id="prev_hd_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.cos')}</div><div class="calc-preview-val neg" id="prev_hd_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.db1')}</div><div class="calc-preview-val" id="prev_hd_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzHindirektPanel(i,yr){
@@ -344,32 +344,32 @@ function buildUmsatzHindirektPanel(i,yr){
   return`
   <div class="field-grid">
     <div class="field-group">
-      <div class="field-label">Indirekter Umsatz zu ${isHek?'HEK':'UVP'} (€) <span class="tip">i<span class="tip-box">Umsätze, die der Händler durch diesen Deal zusätzlich mit anderen Vereinen oder Endkunden generiert.</span></span></div>
+      <div class="field-label">${isHek?t('um.hindirektHEK'):t('um.hindirektUVP')} <span class="tip">i<span class="tip-box">${isHek?t('tip.umHindirektHEK'):t('tip.umHindirektUVP')}</span></span></div>
       <input type="number" id="um_hindirektHek_${i}" value="${yr.haendlerIndirektHek}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'':'style="display:none"'}>
       <input type="number" id="um_hindirektUvp_${i}" value="${yr.haendlerIndirektUvp}" min="0" placeholder="0" oninput="updateUmsatzPreview(${i})" ${isHek?'style="display:none"':''}>
     </div>
   </div>
   <div class="calc-preview" id="prev_hindirekt_${i}">
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Rabatt</div><div class="calc-preview-val neg" id="prev_hi_rabatt_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Erlösschm.</div><div class="calc-preview-val neg" id="prev_hi_erloess_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Nettoumsatz</div><div class="calc-preview-val pos" id="prev_hi_netto_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">./. Wareneinsatz (COS)</div><div class="calc-preview-val neg" id="prev_hi_cos_${i}">–</div></div>
-    <div class="calc-preview-cell"><div class="calc-preview-lbl">Deckungsbeitrag I</div><div class="calc-preview-val" id="prev_hi_db_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.rabatt')}</div><div class="calc-preview-val neg" id="prev_hi_rabatt_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.erloess')}</div><div class="calc-preview-val neg" id="prev_hi_erloess_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.netto')}</div><div class="calc-preview-val pos" id="prev_hi_netto_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.cos')}</div><div class="calc-preview-val neg" id="prev_hi_cos_${i}">–</div></div>
+    <div class="calc-preview-cell"><div class="calc-preview-lbl">${t('prev.db1')}</div><div class="calc-preview-val" id="prev_hi_db_${i}">–</div></div>
   </div>`;}
 
 function buildUmsatzSonstigePanel(i,yr){
   return`
   <div class="field-grid cols-3">
     <div class="field-group">
-      <div class="field-label">Marketingkosten (€) <span class="tip">i<span class="tip-box">Kosten für Marketing-Maßnahmen rund um den Vertrag.</span></span></div>
+      <div class="field-label">${t('um.marketing')} <span class="tip">i<span class="tip-box">${t('tip.marketing')}</span></span></div>
       <input type="number" id="um_marketing_${i}" value="${yr.marketingkosten}" min="0" placeholder="0">
     </div>
     <div class="field-group">
-      <div class="field-label">Logistikkosten (€) <span class="tip">i<span class="tip-box">Versand-, Lager- und Logistikkosten für diesen Deal.</span></span></div>
+      <div class="field-label">${t('um.logistik')} <span class="tip">i<span class="tip-box">${t('tip.logistik')}</span></span></div>
       <input type="number" id="um_logistik_${i}" value="${yr.logistikkosten}" min="0" placeholder="0">
     </div>
     <div class="field-group">
-      <div class="field-label">Sonstige Kosten (€) <span class="tip">i<span class="tip-box">Alle weiteren Kosten, die nicht in die anderen Kategorien passen.</span></span></div>
+      <div class="field-label">${t('um.sonstige')} <span class="tip">i<span class="tip-box">${t('tip.sonstigeKosten')}</span></span></div>
       <input type="number" id="um_sonstige_${i}" value="${yr.sonstigeKosten}" min="0" placeholder="0">
     </div>
   </div>`;}
@@ -398,8 +398,8 @@ function buildLigaLabelSection() {
   if (!container) return;
   container.innerHTML = state.years.map((yr, i) => `
     <div class="field-group">
-      <div class="field-label">${yr.label} – Liga</div>
-      <input type="text" id="ligaLabel_${i}" value="${yr.ligaLabel||''}" placeholder="z. B. Bundesliga">
+      <div class="field-label">${yr.label} ${t('um.ligaSuffix')}</div>
+      <input type="text" id="ligaLabel_${i}" value="${yr.ligaLabel||''}" placeholder="${t('ph.liga')}">
     </div>
   `).join('');
 }
@@ -425,7 +425,7 @@ function updateUmsatzPreview(i){
     const hE = (parseFloat(normNum(document.getElementById('haendlerErloesschmaelerung')?.value))||0)/100;
     const hFR = (parseFloat(normNum(document.getElementById('haendlerFreiware')?.value))||0)/100;
     const yr = state.years[i] || {};
-    const fmtP = n => n===0?'–':new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+    const fmtP = n => n===0?'–':new Intl.NumberFormat(getLocale(),{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
     const setV = (id,val,pos) => {
       const el=document.getElementById(id); if(!el) return;
       el.textContent=fmtP(val);
@@ -605,21 +605,21 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
 
   const hasQual=state.qualVerein||state.warumVerein||state.qualHandel||state.andereVereine||state.umsatzPotenziale;
   const qualBlock=hasQual?`
-    <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Qualitative Einschätzung</div><div class="section-head-line"></div></div>
+    <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">${t('result.qual')}</div><div class="section-head-line"></div></div>
     <div class="qual-grid">
-      ${state.qualVerein?`<div class="qual-cell span-2"><div class="qual-cell-label">Qualitative Beurteilung Verein</div><div class="qual-cell-text">${esc(state.qualVerein)}</div></div>`:''}
-      ${state.warumVerein?`<div class="qual-cell"><div class="qual-cell-label">Warum dieser Verein?</div><div class="qual-cell-text">${esc(state.warumVerein)}</div></div>`:''}
-      ${state.qualHandel?`<div class="qual-cell"><div class="qual-cell-label">Qualitative Beurteilung Fachhandel</div><div class="qual-cell-text">${esc(state.qualHandel)}</div></div>`:''}
-      ${state.andereVereine?`<div class="qual-cell"><div class="qual-cell-label">Andere Vereine beim Händler</div><div class="qual-cell-text">${esc(state.andereVereine)}</div></div>`:''}
-      ${state.umsatzPotenziale?`<div class="qual-cell span-2"><div class="qual-cell-label">Zusätzliche Umsatzpotenziale</div><div class="qual-cell-text">${esc(state.umsatzPotenziale)}</div></div>`:''}
+      ${state.qualVerein?`<div class="qual-cell span-2"><div class="qual-cell-label">${t('qual.verein')}</div><div class="qual-cell-text">${esc(state.qualVerein)}</div></div>`:''}
+      ${state.warumVerein?`<div class="qual-cell"><div class="qual-cell-label">${t('qual.warum')}</div><div class="qual-cell-text">${esc(state.warumVerein)}</div></div>`:''}
+      ${state.qualHandel?`<div class="qual-cell"><div class="qual-cell-label">${t('qual.handel')}</div><div class="qual-cell-text">${esc(state.qualHandel)}</div></div>`:''}
+      ${state.andereVereine?`<div class="qual-cell"><div class="qual-cell-label">${t('qual.andere')}</div><div class="qual-cell-text">${esc(state.andereVereine)}</div></div>`:''}
+      ${state.umsatzPotenziale?`<div class="qual-cell span-2"><div class="qual-cell-label">${t('qual.potenziale')}</div><div class="qual-cell-text">${esc(state.umsatzPotenziale)}</div></div>`:''}
     </div>`:'';
 
   document.getElementById('resultContent').innerHTML=`
     <div class="result-verdict ${tier}">
       <div class="verdict-icon">${tier==='pos'?'🏆':tier==='warn'?'🤔':'🚨'}</div>
       <div class="verdict-text">
-        <h2>${tier==='pos'?'Deal empfehlenswert':tier==='warn'?'Deal prüfungswürdig':'Deal nicht empfehlenswert'}</h2>
-        <p>${tier==='pos'?`DB-Quote über 30% – Deal ist wirtschaftlich.`:tier==='warn'?`DB-Quote zwischen 20–30% – Rücksprache erforderlich.`:`DB-Quote unter 20% – nur im Ausnahmefall genehmigungsfähig.`} DB: ${fmt(totalDB)} · DB-Quote: ${(totalDbQuote*100).toFixed(1)}%</p>
+        <h2>${t('verdict.'+tier+'.title')}</h2>
+        <p>${t('verdict.'+tier+'.desc')} DB: ${fmt(totalDB)} · DB-Quote: ${(totalDbQuote*100).toFixed(1)}%</p>
       </div>
     </div>
 
@@ -629,63 +629,63 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
     </div>
 
     <div class="kpi-strip">
-      <div class="kpi-cell"><div class="kpi-lbl">Nettoumsatz</div><div class="kpi-val ${totalNetto>0?'pos':''}">${fmtK(totalNetto)}</div></div>
-      <div class="kpi-cell"><div class="kpi-lbl">Invest</div><div class="kpi-val neg">${fmtK(-totalInvest)}</div></div>
-      <div class="kpi-cell"><div class="kpi-lbl">Deckungsbeitrag</div><div class="kpi-val ${tier==='neg'?'neg':'pos'}">${fmtK(totalDB)}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">${t('lbl.nettoumsatz')}</div><div class="kpi-val ${totalNetto>0?'pos':''}">${fmtK(totalNetto)}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">${t('lbl.invest')}</div><div class="kpi-val neg">${fmtK(-totalInvest)}</div></div>
+      <div class="kpi-cell"><div class="kpi-lbl">${t('lbl.deckungsbeitrag')}</div><div class="kpi-val ${tier==='neg'?'neg':'pos'}">${fmtK(totalDB)}</div></div>
     </div>
 
-    <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">Detailergebnis je Jahr</div><div class="section-head-line"></div></div>
+    <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">${t('result.detail')}</div><div class="section-head-line"></div></div>
     <div style="overflow-x:auto">
     <table class="rtable">
-      <thead><tr><th>Position</th>${yearCols}${totalCol}</tr></thead>
+      <thead><tr><th>${t('tbl.position')}</th>${yearCols}${totalCol}</tr></thead>
       <tbody>
-        <tr class="section-head-row"><td colspan="${cols}">Sponsoring-Invest</td></tr>
-        ${row('Cash-Leistung',r=>-r.cashCost)}
-        ${row('Freiware (zu COS bewertet)',r=>-r.freiwareCos)}
-        ${row('Gesamt Sponsoring-Invest (COS)',r=>-r.sponsoringInvest,true)}
+        <tr class="section-head-row"><td colspan="${cols}">${t('tbl.section.sponsoring')}</td></tr>
+        ${row(t('tbl.row.cash'),r=>-r.cashCost)}
+        ${row(t('tbl.row.freiwareCos'),r=>-r.freiwareCos)}
+        ${row(t('tbl.row.sponsoringTotal'),r=>-r.sponsoringInvest,true)}
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
-        <tr class="section-head-row"><td colspan="${cols}">Umsatz Verein direkt</td></tr>
-        ${row('Bruttoumsatz Verein',r=>r.vereinBrutto)}
-        ${row('./. Rabatt',r=>-r.vereinRabatt,false,true)}
-        ${row('./. Erlösschmälerungen',r=>-r.vereinErloess,false,true)}
-        ${row('Nettoumsatz Verein',r=>r.vereinNetto)}
-        ${row('./. Wareneinsatz (COS)',r=>-r.vereinCos,false,true)}
-        ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.vereinNetto?-r.vereinCos/r.vereinNetto:0,true)}
-        ${row('DB I Verein',r=>r.vereinDB1)}
-        ${rowPct('DB I / Nettoumsatz',r=>r.vereinNetto?r.vereinDB1/r.vereinNetto:0,true)}
+        <tr class="section-head-row"><td colspan="${cols}">${t('tbl.section.verein')}</td></tr>
+        ${row(t('tbl.row.bruttoVerein'),r=>r.vereinBrutto)}
+        ${row(t('tbl.row.rabatt'),r=>-r.vereinRabatt,false,true)}
+        ${row(t('tbl.row.erloess'),r=>-r.vereinErloess,false,true)}
+        ${row(t('tbl.row.nettoVerein'),r=>r.vereinNetto)}
+        ${row(t('tbl.row.cos'),r=>-r.vereinCos,false,true)}
+        ${rowPct(t('tbl.row.cosRatio'),r=>r.vereinNetto?-r.vereinCos/r.vereinNetto:0,true)}
+        ${row(t('tbl.row.db1Verein'),r=>r.vereinDB1)}
+        ${rowPct(t('tbl.row.db1Ratio'),r=>r.vereinNetto?r.vereinDB1/r.vereinNetto:0,true)}
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
-        <tr class="section-head-row"><td colspan="${cols}">Umsatz Fachhändler direkt</td></tr>
-        ${row('Bruttoumsatz Händler direkt',r=>r.hdBrutto)}
-        ${row('./. Rabatt',r=>-r.hdRabatt,false,true)}
-        ${row('./. Erlösschmälerungen',r=>-r.hdErloess,false,true)}
-        ${row('Nettoumsatz Händler direkt',r=>r.hdNetto)}
-        ${row('./. Wareneinsatz (COS)',r=>-r.hdCos,false,true)}
-        ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.hdNetto?-r.hdCos/r.hdNetto:0,true)}
-        ${row('DB I Händler direkt',r=>r.hdDB1)}
-        ${rowPct('DB I / Nettoumsatz',r=>r.hdNetto?r.hdDB1/r.hdNetto:0,true)}
+        <tr class="section-head-row"><td colspan="${cols}">${t('tbl.section.hdirekt')}</td></tr>
+        ${row(t('tbl.row.bruttoHdirekt'),r=>r.hdBrutto)}
+        ${row(t('tbl.row.rabatt'),r=>-r.hdRabatt,false,true)}
+        ${row(t('tbl.row.erloess'),r=>-r.hdErloess,false,true)}
+        ${row(t('tbl.row.nettoHdirekt'),r=>r.hdNetto)}
+        ${row(t('tbl.row.cos'),r=>-r.hdCos,false,true)}
+        ${rowPct(t('tbl.row.cosRatio'),r=>r.hdNetto?-r.hdCos/r.hdNetto:0,true)}
+        ${row(t('tbl.row.db1Hdirekt'),r=>r.hdDB1)}
+        ${rowPct(t('tbl.row.db1Ratio'),r=>r.hdNetto?r.hdDB1/r.hdNetto:0,true)}
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
-        <tr class="section-head-row"><td colspan="${cols}">Umsatz Fachhändler indirekt</td></tr>
-        ${row('Bruttoumsatz Händler indirekt',r=>r.hiBrutto)}
-        ${row('./. Rabatt',r=>-r.hiRabatt,false,true)}
-        ${row('./. Erlösschmälerungen',r=>-r.hiErloess,false,true)}
-        ${row('Nettoumsatz Händler indirekt',r=>r.hiNetto)}
-        ${row('./. Wareneinsatz (COS)',r=>-r.hiCos,false,true)}
-        ${rowPct('Wareneinsatz / Nettoumsatz',r=>r.hiNetto?-r.hiCos/r.hiNetto:0,true)}
-        ${row('DB I Händler indirekt',r=>r.hiDB1)}
-        ${rowPct('DB I / Nettoumsatz',r=>r.hiNetto?r.hiDB1/r.hiNetto:0,true)}
+        <tr class="section-head-row"><td colspan="${cols}">${t('tbl.section.hindirekt')}</td></tr>
+        ${row(t('tbl.row.bruttoHindirekt'),r=>r.hiBrutto)}
+        ${row(t('tbl.row.rabatt'),r=>-r.hiRabatt,false,true)}
+        ${row(t('tbl.row.erloess'),r=>-r.hiErloess,false,true)}
+        ${row(t('tbl.row.nettoHindirekt'),r=>r.hiNetto)}
+        ${row(t('tbl.row.cos'),r=>-r.hiCos,false,true)}
+        ${rowPct(t('tbl.row.cosRatio'),r=>r.hiNetto?-r.hiCos/r.hiNetto:0,true)}
+        ${row(t('tbl.row.db1Hindirekt'),r=>r.hiDB1)}
+        ${rowPct(t('tbl.row.db1Ratio'),r=>r.hiNetto?r.hiDB1/r.hiNetto:0,true)}
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
-        <tr class="section-head-row"><td colspan="${cols}">Sonstige Kosten</td></tr>
-        ${row('Sonstige Kosten gesamt',r=>-r.sonstige)}
+        <tr class="section-head-row"><td colspan="${cols}">${t('tbl.section.sonstige')}</td></tr>
+        ${row(t('tbl.row.sonstigeTotal'),r=>-r.sonstige)}
         <tr class="tbl-spacer"><td colspan="${cols}"></td></tr>
 
-        <tr class="section-head-row section-head-row--total"><td colspan="${cols}" style="color:#fff">Gesamtergebnis</td></tr>
-        ${row('Nettoumsatz gesamt',r=>r.gesamtNetto,true)}
-        ${row('Deckungsbeitrag gesamt',r=>r.gesamtDB,true)}
-        ${rowPct('DB-Quote',r=>r.dbQuote,false,totalDbQuote)}
+        <tr class="section-head-row section-head-row--total"><td colspan="${cols}" style="color:#fff">${t('tbl.section.gesamt')}</td></tr>
+        ${row(t('tbl.row.nettoGesamt'),r=>r.gesamtNetto,true)}
+        ${row(t('tbl.row.dbGesamt'),r=>r.gesamtDB,true)}
+        ${rowPct(t('tbl.row.dbQuote'),r=>r.dbQuote,false,totalDbQuote)}
       </tbody>
     </table>
     </div>
@@ -694,84 +694,84 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
 
     <div class="info-strip">
       <div class="info-strip-section">
-        <div class="info-strip-heading">Verein</div>
+        <div class="info-strip-heading">${t('info.verein')}</div>
         <div class="info-strip-grid">
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Name</div>
+            <div class="info-strip-lbl">${t('info.name')}</div>
             <div class="info-strip-val">${state.vereinName||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Liga</div>
+            <div class="info-strip-lbl">${t('info.liga')}</div>
             <div class="info-strip-val">${state.liga||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Sportart</div>
+            <div class="info-strip-lbl">${t('info.sportart')}</div>
             <div class="info-strip-val">${state.sportart||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Laufzeit</div>
-            <div class="info-strip-val">${state.laufzeit} Jahr${state.laufzeit>1?'e':''}</div>
+            <div class="info-strip-lbl">${t('info.laufzeit')}</div>
+            <div class="info-strip-val">${state.laufzeit} ${state.laufzeit>1?t('info.years'):t('info.year')}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Kdnr. Freiware</div>
+            <div class="info-strip-lbl">${t('info.kdnrFW')}</div>
             <div class="info-strip-val">${state.kdnrVereinFreiware||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Kdnr. Nachkauf</div>
+            <div class="info-strip-lbl">${t('info.kdnrNK')}</div>
             <div class="info-strip-val">${state.kdnrVereinNachkauf||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Nachkauf-Kondition</div>
+            <div class="info-strip-lbl">${t('info.nachkaufKond')}</div>
             <div class="info-strip-val">${(state.vereinNachkauf*100).toFixed(1)}%</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Erlösschmälerungen</div>
+            <div class="info-strip-lbl">${t('info.erloess')}</div>
             <div class="info-strip-val">${(state.vereinErloesschmaelerung*100).toFixed(1)}%</div>
           </div>
         </div>
       </div>
       <div class="info-strip-section">
-        <div class="info-strip-heading">Fachhändler</div>
+        <div class="info-strip-heading">${t('info.haendler')}</div>
         <div class="info-strip-grid">
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Name</div>
+            <div class="info-strip-lbl">${t('info.name')}</div>
             <div class="info-strip-val">${state.haendlerName||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Kundennummer</div>
+            <div class="info-strip-lbl">${t('info.kdnr')}</div>
             <div class="info-strip-val">${state.kdnrHaendler||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Nachkauf-Kondition</div>
+            <div class="info-strip-lbl">${t('info.nachkaufKond')}</div>
             <div class="info-strip-val">${(state.haendlerNachkauf*100).toFixed(1)}%</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Einkauf Freiware</div>
+            <div class="info-strip-lbl">${t('info.einkaufFreiware')}</div>
             <div class="info-strip-val">${(state.haendlerFreiware*100).toFixed(1)}%</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Erlösschmälerungen</div>
+            <div class="info-strip-lbl">${t('info.erloess')}</div>
             <div class="info-strip-val">${(state.haendlerErloesschmaelerung*100).toFixed(1)}%</div>
           </div>
         </div>
       </div>
       <div class="info-strip-section">
-        <div class="info-strip-heading">Intern</div>
+        <div class="info-strip-heading">${t('info.intern')}</div>
         <div class="info-strip-grid">
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Außendienst</div>
+            <div class="info-strip-lbl">${t('info.aussendienst')}</div>
             <div class="info-strip-val">${state.aussendienst||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">Umsatzverantwortlich</div>
+            <div class="info-strip-lbl">${t('info.verantwortlich')}</div>
             <div class="info-strip-val">${state.verantwortlich||'–'}</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">HEK/COS-Quotient</div>
+            <div class="info-strip-lbl">${t('info.hekCos')}</div>
             <div class="info-strip-val">${state.hekCosQuotient}x</div>
           </div>
           <div class="info-strip-cell">
-            <div class="info-strip-lbl">UVP/COS-Quotient</div>
+            <div class="info-strip-lbl">${t('info.uvpCos')}</div>
             <div class="info-strip-val">${state.uvpCosQuotient}x</div>
           </div>
         </div>
@@ -781,14 +781,14 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
     <div class="edit-panel">
       <div class="edit-panel-title">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="vertical-align:-1px;margin-right:6px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        Werte anpassen — Schritt direkt öffnen
+        ${t('edit.title')}
       </div>
       <div class="edit-btns">
-        <button class="edit-btn" onclick="navToStep(1)"><span class="edit-btn-n">1</span>Stammdaten</button>
-        <button class="edit-btn" onclick="navToStep(2)"><span class="edit-btn-n">2</span>Quotienten</button>
-        <button class="edit-btn" onclick="navToStep(3)"><span class="edit-btn-n">3</span>Qualitativ</button>
-        <button class="edit-btn" onclick="navToStep(4)"><span class="edit-btn-n">4</span>Sponsoring</button>
-        <button class="edit-btn" onclick="navToStep(5)"><span class="edit-btn-n">5</span>Umsätze</button>
+        <button class="edit-btn" onclick="navToStep(1)"><span class="edit-btn-n">1</span>${t('edit.step1')}</button>
+        <button class="edit-btn" onclick="navToStep(2)"><span class="edit-btn-n">2</span>${t('edit.step2')}</button>
+        <button class="edit-btn" onclick="navToStep(3)"><span class="edit-btn-n">3</span>${t('edit.step3')}</button>
+        <button class="edit-btn" onclick="navToStep(4)"><span class="edit-btn-n">4</span>${t('edit.step4')}</button>
+        <button class="edit-btn" onclick="navToStep(5)"><span class="edit-btn-n">5</span>${t('edit.step5')}</button>
       </div>
     </div>`;
 
@@ -803,8 +803,8 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
 }
 
 // ── FORMATTING ──
-function fmt(n){if(n===0)return'–';return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
-function fmtK(n){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
+function fmt(n){if(n===0)return'–';return new Intl.NumberFormat(getLocale(),{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
+function fmtK(n){return new Intl.NumberFormat(getLocale(),{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
 
 // ── LIVE BAR ──
@@ -814,7 +814,7 @@ function updateLiveBar(netto,invest,db,dbq,calculated){
   const badge=document.getElementById('liveVerdict');
   if(!calculated){
     [elN,elI,elD,elQ].forEach(e=>{e.textContent='–';e.className='live-pill-value';});
-    badge.className='live-verdict';badge.textContent='In Bearbeitung';return;
+    badge.className='live-verdict';badge.textContent=t('live.working');return;
   }
   elN.textContent=fmtK(netto);elN.className='live-pill-value'+(netto>0?' active':'');
   elI.textContent=fmtK(-invest);elI.className='live-pill-value neg';
@@ -822,7 +822,7 @@ function updateLiveBar(netto,invest,db,dbq,calculated){
   elD.textContent=fmtK(db);elD.className='live-pill-value'+(liveTier==='neg'?' neg':' pos');
   elQ.textContent=(dbq*100).toFixed(1)+'%';elQ.className='live-pill-value'+(liveTier==='neg'?' neg':' pos');
   badge.className='live-verdict '+liveTier;
-  badge.textContent=liveTier==='pos'?'✓ Deal positiv':liveTier==='warn'?'⚠ Prüfung erforderlich':'✗ Deal ablehnen';
+  badge.textContent=liveTier==='pos'?t('live.pos'):liveTier==='warn'?t('live.warn'):t('live.neg');
 }
 
 function liveEstimate(){
@@ -999,7 +999,7 @@ document.getElementById('emailTagInput').addEventListener('blur', () => {
 function buildEmailHTML(resultState, resultHTML) {
   const pos = resultState.totalDB >= 0;
   return `<!DOCTYPE html>
-<html lang="de">
+<html lang="${getLang()}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1039,17 +1039,17 @@ function buildEmailHTML(resultState, resultHTML) {
   <div class="header">
     <div>
       <div style="color:#fff;font-size:20px;font-weight:900;letter-spacing:-0.5px">uhlsport</div>
-      <div class="header-title">Kalkulation Ausrüstungsvertrag · ${new Date().toLocaleDateString('de-DE')}</div>
+      <div class="header-title">${t('emailHtml.headerTitle')} · ${new Date().toLocaleDateString(getLocale(),{day:'2-digit',month:'2-digit',year:'numeric'})}</div>
     </div>
   </div>
   <div class="verdict">
-    <h1>${pos ? '✓ Deal empfehlenswert' : '✗ Nicht empfehlenswert'}</h1>
-    <p>${pos ? 'Deckungsbeitrag: ' + resultState.fmtDB + ' · DB-Quote: ' + resultState.dbQStr : 'Negativer Deckungsbeitrag: ' + resultState.fmtDB}</p>
+    <h1>${pos ? t('emailHtml.verdict.pos') : t('emailHtml.verdict.neg')}</h1>
+    <p>${pos ? t('emailHtml.db.pos')+resultState.fmtDB+' · DB-Quote: '+resultState.dbQStr : t('emailHtml.db.neg')+resultState.fmtDB}</p>
   </div>
   <div class="kpis">
-    <div class="kpi"><div class="kpi-lbl">Nettoumsatz</div><div class="kpi-val">${resultState.fmtNetto}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Invest</div><div class="kpi-val neg">${resultState.fmtInvest}</div></div>
-    <div class="kpi"><div class="kpi-lbl">Deckungsbeitrag</div><div class="kpi-val ${pos ? 'pos' : 'neg'}">${resultState.fmtDB}</div></div>
+    <div class="kpi"><div class="kpi-lbl">${t('lbl.nettoumsatz')}</div><div class="kpi-val">${resultState.fmtNetto}</div></div>
+    <div class="kpi"><div class="kpi-lbl">${t('lbl.invest')}</div><div class="kpi-val neg">${resultState.fmtInvest}</div></div>
+    <div class="kpi"><div class="kpi-lbl">${t('lbl.deckungsbeitrag')}</div><div class="kpi-val ${pos ? 'pos' : 'neg'}">${resultState.fmtDB}</div></div>
   </div>
   <div class="body">
     ${resultHTML}
@@ -1059,61 +1059,61 @@ function buildEmailHTML(resultState, resultHTML) {
         <tr>
           <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap">Name</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.vereinName||'–'}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap">Liga</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;white-space:nowrap">${t('info.liga')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.liga||'–'}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Sportart</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.sportart')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.sportart||'–'}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Laufzeit</td>
-          <td style="padding:6px 0;color:#111;font-weight:500">${resultState.laufzeit} Jahr${resultState.laufzeit>1?'e':''}</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.laufzeit')}</td>
+          <td style="padding:6px 0;color:#111;font-weight:500">${resultState.laufzeit} ${resultState.laufzeit>1?t('info.years'):t('info.year')}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Kdnr. Freiware</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.kdnrFW')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.kdnrFW||'–'}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Kdnr. Nachkauf</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.kdnrNK')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.kdnrNK||'–'}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Nachkauf-Kond.</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.nachkaufKond')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.kondVerein}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Erlösschmäl.</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.erloess')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.kondVereinErl}</td>
         </tr>
-        <tr><td colspan="4" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#111;padding:12px 0 6px;border-bottom:1px solid #e4e4e4">Fachhändler</td></tr>
+        <tr><td colspan="4" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#111;padding:12px 0 6px;border-bottom:1px solid #e4e4e4">${t('info.haendler')}</td></tr>
         <tr>
           <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Name</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.haendlerName||'–'}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Kundennummer</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.kdnr')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.kdnrH||'–'}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Nachkauf-Kond.</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.nachkaufKond')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.kondHaendler}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Einkauf Freiware</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.einkaufFreiware')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.kondFreiware}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Erlösschmäl.</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.erloess')}</td>
           <td colspan="3" style="padding:6px 0;color:#111;font-weight:500">${resultState.kondErloess}</td>
         </tr>
-        <tr><td colspan="4" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#111;padding:12px 0 6px;border-bottom:1px solid #e4e4e4">Intern</td></tr>
+        <tr><td colspan="4" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#111;padding:12px 0 6px;border-bottom:1px solid #e4e4e4">${t('info.intern')}</td></tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Außendienst</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.aussendienst')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.aussendienst||'–'}</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">Verantwortlich</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.verantwortlich')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.verantwortlich||'–'}</td>
         </tr>
         <tr>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">HEK/COS</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.hekCos')}</td>
           <td style="padding:6px 12px 6px 0;color:#111;font-weight:500">${resultState.hekCos}x</td>
-          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">UVP/COS</td>
+          <td style="padding:6px 12px 6px 0;color:#999;font-size:10px;text-transform:uppercase;letter-spacing:0.8px">${t('info.uvpCos')}</td>
           <td style="padding:6px 0;color:#111;font-weight:500">${resultState.uvpCos}x</td>
         </tr>
       </table>
     </div>
   </div>
-  <div class="footer">uhlsport GmbH · Diese E-Mail wurde automatisch durch das Kalkulationstool generiert.</div>
+  <div class="footer">${t('emailHtml.footer')}</div>
 </div>
 
 <!-- ══ EMAIL MODAL ══ -->
@@ -1121,23 +1121,23 @@ function buildEmailHTML(resultState, resultHTML) {
   <div class="email-modal" onclick="event.stopPropagation()">
     <div class="email-modal-title">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" style="vertical-align:-2px;margin-right:8px"><rect x="2" y="4" width="20" height="16" rx="1"/><polyline points="2,4 12,13 22,4"/></svg>
-      Auswertung per E-Mail senden
+      ${t('email.title')}
     </div>
-    <p class="email-modal-sub">Die Kalkulation wird als formatierte E-Mail zugestellt. Mehrere Adressen mit Enter oder Komma bestätigen.</p>
+    <p class="email-modal-sub">${t('email.sub')}</p>
     <div class="email-modal-fixed">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      Immer im BCC: <span>cfenske@uhlsport.de</span>
+      ${t('email.bcc')} <span>cfenske@uhlsport.de</span>
     </div>
     <div class="email-tag-input" id="emailTagInput" onclick="document.getElementById('emailRawInput').focus()">
-      <input type="text" id="emailRawInput" class="email-tag-input-field" placeholder="E-Mail-Adresse eingeben …" autocomplete="off" spellcheck="false">
+      <input type="text" id="emailRawInput" class="email-tag-input-field" placeholder="${t('ph.email')}" autocomplete="off" spellcheck="false">
     </div>
-    <div class="email-modal-hint">Enter oder Komma = Adresse hinzufügen · Klick auf × = entfernen</div>
+    <div class="email-modal-hint">${t('email.hint')}</div>
     <div class="email-modal-err" id="emailErr"></div>
     <div class="email-modal-actions">
-      <button class="email-cancel-btn" onclick="closeEmailModal()">Abbrechen</button>
+      <button class="email-cancel-btn" onclick="closeEmailModal()">${t('btn.cancel')}</button>
       <button class="email-send-btn" id="emailSendBtn" onclick="sendEmail()">
         <div class="spinner"></div>
-        <span class="send-label">Jetzt senden</span>
+        <span class="send-label">${t('btn.send')}</span>
       </button>
     </div>
   </div>
@@ -1148,9 +1148,9 @@ function buildEmailHTML(resultState, resultHTML) {
 }
 
 function buildEmailTableHTML(results, state, totalDbQuote) {
-  const fmtE = n => n === 0 ? '–' : new Intl.NumberFormat('de-DE', {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+  const fmtE = n => n === 0 ? '–' : new Intl.NumberFormat(getLocale(), {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
   const yC = results.map(r => `<th>${r.label}</th>`).join('');
-  const tC = results.length > 1 ? '<th>Gesamt</th>' : '';
+  const tC = results.length > 1 ? '<th>'+t('tbl.total')+'</th>' : '';
   const cols = results.length + (results.length > 1 ? 2 : 1);
   function erow(label, fn, bold=false, sub=false) {
     const cells = results.map(r => { const v = fn(r); return `<td class="${v<0?'v-neg':v>0?'v-pos':''}">${fmtE(v)}</td>`; }).join('');
@@ -1166,28 +1166,28 @@ function buildEmailTableHTML(results, state, totalDbQuote) {
     return `<tr><td>${label}</td>${cells}${totTd}</tr>`;
   }
   return `
-    <h3>Detailergebnis je Jahr</h3>
+    <h3>${t('result.detail')}</h3>
     <table>
-      <thead><tr><th>Position</th>${yC}${tC}</tr></thead>
+      <thead><tr><th>${t('tbl.position')}</th>${yC}${tC}</tr></thead>
       <tbody>
-        <tr class="section-row"><td colspan="${cols}">Sponsoring-Invest</td></tr>
-        ${erow('Cash-Leistung', r=>-r.cashCost)}
-        ${erow('Freiware (zu COS bewertet)', r=>-r.freiwareCos)}
-        ${erow('Gesamt Sponsoring-Invest (COS)', r=>-r.sponsoringInvest, true)}
-        <tr class="section-row"><td colspan="${cols}">Umsätze & Deckungsbeiträge</td></tr>
-        ${erow('Nettoumsatz Verein direkt', r=>r.vereinNetto)}
-        ${erow('./. Wareneinsatz Verein (COS)', r=>-r.vereinCos, false, true)}
-        ${erow('DB I — Verein', r=>r.vereinDB1)}
-        ${erow('Nettoumsatz Händler direkt', r=>r.hdNetto)}
-        ${erow('./. Wareneinsatz Händler direkt (COS)', r=>-r.hdCos, false, true)}
-        ${erow('DB I — Händler direkt', r=>r.hdDB1)}
-        ${erow('Nettoumsatz Händler indirekt', r=>r.hiNetto)}
-        ${erow('./. Wareneinsatz Händler indirekt (COS)', r=>-r.hiCos, false, true)}
-        ${erow('DB I — Händler indirekt', r=>r.hiDB1)}
-        ${erow('Sonstige Kosten', r=>-r.sonstige)}
-        ${erow('Nettoumsatz gesamt', r=>r.gesamtNetto, true)}
-        ${erow('Deckungsbeitrag gesamt', r=>r.gesamtDB, true)}
-        ${erowPct('DB-Quote', r=>r.dbQuote)}
+        <tr class="section-row"><td colspan="${cols}">${t('tbl.section.sponsoring')}</td></tr>
+        ${erow(t('tbl.row.cash'), r=>-r.cashCost)}
+        ${erow(t('tbl.row.freiwareCos'), r=>-r.freiwareCos)}
+        ${erow(t('tbl.row.sponsoringTotal'), r=>-r.sponsoringInvest, true)}
+        <tr class="section-row"><td colspan="${cols}">${t('emailTbl.section.umsatz')}</td></tr>
+        ${erow(t('emailTbl.row.nettoVerein'), r=>r.vereinNetto)}
+        ${erow(t('emailTbl.row.cosVerein'), r=>-r.vereinCos, false, true)}
+        ${erow(t('emailTbl.row.db1Verein'), r=>r.vereinDB1)}
+        ${erow(t('emailTbl.row.nettoHdirekt'), r=>r.hdNetto)}
+        ${erow(t('emailTbl.row.cosHdirekt'), r=>-r.hdCos, false, true)}
+        ${erow(t('emailTbl.row.db1Hdirekt'), r=>r.hdDB1)}
+        ${erow(t('emailTbl.row.nettoHindirekt'), r=>r.hiNetto)}
+        ${erow(t('emailTbl.row.cosHindirekt'), r=>-r.hiCos, false, true)}
+        ${erow(t('emailTbl.row.db1Hindirekt'), r=>r.hiDB1)}
+        ${erow(t('tbl.row.sonstigeTotal'), r=>-r.sonstige)}
+        ${erow(t('tbl.row.nettoGesamt'), r=>r.gesamtNetto, true)}
+        ${erow(t('tbl.row.dbGesamt'), r=>r.gesamtDB, true)}
+        ${erowPct(t('tbl.row.dbQuote'), r=>r.dbQuote)}
       </tbody>
     </table>`;
 }
@@ -1196,7 +1196,7 @@ async function sendEmail() {
   addEmailFromInput();
   const errEl = document.getElementById('emailErr');
   if (emailRecipients.length === 0) {
-    errEl.textContent = 'Bitte mindestens eine E-Mail-Adresse eingeben.';
+    errEl.textContent = t('email.err.noAddr');
     errEl.classList.add('show');
     return;
   }
@@ -1205,11 +1205,11 @@ async function sendEmail() {
   btn.classList.add('sending');
   btn.disabled = true;
 
-  const fmtK2 = n => new Intl.NumberFormat('de-DE', {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+  const fmtK2 = n => new Intl.NumberFormat(getLocale(), {style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
   const lastResults = window._lastResults;
   const lastTotals  = window._lastTotals;
   if (!lastResults) {
-    errEl.textContent = 'Keine Kalkulation gefunden. Bitte zuerst berechnen.';
+    errEl.textContent = t('email.err.noCalc');
     errEl.classList.add('show');
     btn.classList.remove('sending'); btn.disabled = false;
     return;
@@ -1222,12 +1222,12 @@ async function sendEmail() {
   let qualHTML = '';
   if (hQ) {
     const escE = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-    qualHTML = '<h3>Qualitative Einschätzung</h3><table>';
-    if (state.qualVerein)     qualHTML += `<tr><td colspan="2"><strong>Qualitative Beurteilung Verein</strong><br>${escE(state.qualVerein)}</td></tr>`;
-    if (state.warumVerein)    qualHTML += `<tr><td colspan="2"><strong>Warum dieser Verein?</strong><br>${escE(state.warumVerein)}</td></tr>`;
-    if (state.qualHandel)     qualHTML += `<tr><td colspan="2"><strong>Qualitative Beurteilung Fachhandel</strong><br>${escE(state.qualHandel)}</td></tr>`;
-    if (state.andereVereine)  qualHTML += `<tr><td colspan="2"><strong>Andere Vereine beim Händler</strong><br>${escE(state.andereVereine)}</td></tr>`;
-    if (state.umsatzPotenziale) qualHTML += `<tr><td colspan="2"><strong>Zusätzliche Umsatzpotenziale</strong><br>${escE(state.umsatzPotenziale)}</td></tr>`;
+    qualHTML = '<h3>'+t('result.qual')+'</h3><table>';
+    if (state.qualVerein)     qualHTML += `<tr><td colspan="2"><strong>${t('qual.verein')}</strong><br>${escE(state.qualVerein)}</td></tr>`;
+    if (state.warumVerein)    qualHTML += `<tr><td colspan="2"><strong>${t('qual.warum')}</strong><br>${escE(state.warumVerein)}</td></tr>`;
+    if (state.qualHandel)     qualHTML += `<tr><td colspan="2"><strong>${t('qual.handel')}</strong><br>${escE(state.qualHandel)}</td></tr>`;
+    if (state.andereVereine)  qualHTML += `<tr><td colspan="2"><strong>${t('qual.andere')}</strong><br>${escE(state.andereVereine)}</td></tr>`;
+    if (state.umsatzPotenziale) qualHTML += `<tr><td colspan="2"><strong>${t('qual.potenziale')}</strong><br>${escE(state.umsatzPotenziale)}</td></tr>`;
     qualHTML += '</table>';
   }
 
@@ -1258,7 +1258,7 @@ async function sendEmail() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         recipients: emailRecipients,
-        subject: 'Kalkulation ' + state.vereinName + (state.liga ? ' – ' + state.liga : ''),
+        subject: t('emailHtml.subject') + ' ' + state.vereinName + (state.liga ? ' – ' + state.liga : ''),
         html: emailHTML
       })
     });
@@ -1271,7 +1271,7 @@ async function sendEmail() {
       // Server returned non-JSON (e.g. PHP error page)
       btn.classList.remove('sending'); btn.disabled = false;
       errEl.style.color = '';
-      errEl.textContent = '✗ Serverfehler (kein gültiges JSON). HTTP ' + resp.status + '. Prüfe die PHP-Konfiguration des Servers.';
+      errEl.textContent = t('email.err.server') + resp.status + '. ' + t('email.err.serverHint');
       errEl.classList.add('show');
       console.error('Server response:', rawText);
       return;
