@@ -535,6 +535,27 @@ select option { background: var(--white); }
 }
 .recalc-btn:hover { background: var(--slate-200); }
 
+/* ── ROHERTRAG STRIP ── */
+.rohertrag-strip {
+  display: flex; border: 1px solid var(--border); border-radius: var(--radius-md);
+  overflow: hidden; margin-bottom: 24px;
+}
+.rohertrag-cell {
+  flex: 1; padding: 14px 18px; border-right: 1px solid var(--border);
+  background: var(--gray-50);
+}
+.rohertrag-cell:last-child { border-right: none; }
+.rohertrag-total { background: var(--gray-100); }
+.rohertrag-lbl {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+.rohertrag-val {
+  font-size: 18px; font-weight: 900; font-family: var(--font-mono); color: var(--text);
+}
+.rohertrag-val.pos { color: var(--green); }
+.rohertrag-val.neg { color: var(--red); }
+
 /* Info strip */
 .info-strip { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 16px; }
 .info-strip-section { border-bottom: 1px solid var(--border); padding: 14px 18px; }

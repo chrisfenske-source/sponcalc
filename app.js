@@ -543,6 +543,13 @@ function berechnen(){
     else{hdCos=hdB/uvp+hdFw/hek;}
     const hdDB1=hdNetto-hdCos;
 
+    // Händler-Rohertrag (aus Händler-Perspektive, nur Direktumsatz)
+    const hdUvpEquiv=hdMode==='hek'?hdB*(uvp/hek):hdB;
+    const hdErloes=hdUvpEquiv*(1-s.vereinNachkauf)/(1+steuer);
+    const hdEinkauf=hdMode==='hek'?hdB*(1-s.haendlerNachkauf):hdB*(hek/uvp)*(1-s.haendlerNachkauf);
+    const hdFwKosten=hdFw*(1-s.haendlerFreiware);
+    const hdRohertrag=hdErloes-hdEinkauf-hdFwKosten;
+
     // Händler indirekt
     const hiB=hdMode==='hek'?yr.haendlerIndirektHek:yr.haendlerIndirektUvp;
     let hiRabatt,hiErloess,hiNetto,hiCos;
@@ -564,7 +571,7 @@ function berechnen(){
     const gesamtNetto=vereinNetto+hdNetto+hiNetto;
     const gesamtDB=vereinDB1+hdDB1+hiDB1-sponsoringInvest-sonstige;
     const dbQuote=gesamtNetto>0?gesamtDB/gesamtNetto:0;
-    return{label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
+    return{label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hdRohertrag,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
   });
   const totalNetto=results.reduce((a,r)=>a+r.gesamtNetto,0);
   const totalInvest=results.reduce((a,r)=>a+r.sponsoringInvest+r.sonstige,0);
@@ -602,6 +609,23 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
     const labelHtml=sub?`<span style="padding-left:14px;color:var(--gray-400);font-size:12px">${label}</span>`:label;
     return`<tr style="${sub?'background:var(--gray-50)':''}"><td>${labelHtml}</td>${cells}${totTd}</tr>`;
   }
+
+  const totalHdRoh=results.reduce((a,r)=>a+r.hdRohertrag,0);
+  const hasHdRoh=results.some(r=>r.hdRohertrag!==0);
+  const rohertragBlock=hasHdRoh?`
+    <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">${t('rohertrag.title')}</div><div class="section-head-line"></div></div>
+    <div class="rohertrag-strip">
+      ${results.map(r=>`
+        <div class="rohertrag-cell">
+          <div class="rohertrag-lbl">${r.label}</div>
+          <div class="rohertrag-val ${r.hdRohertrag>=0?'pos':'neg'}">${fmtK(r.hdRohertrag)}</div>
+        </div>`).join('')}
+      ${results.length>1?`
+        <div class="rohertrag-cell rohertrag-total">
+          <div class="rohertrag-lbl">${t('tbl.total')}</div>
+          <div class="rohertrag-val ${totalHdRoh>=0?'pos':'neg'}">${fmtK(totalHdRoh)}</div>
+        </div>`:''}
+    </div>`:'';
 
   const hasQual=state.qualVerein||state.warumVerein||state.qualHandel||state.andereVereine||state.umsatzPotenziale;
   const qualBlock=hasQual?`
@@ -689,6 +713,8 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
       </tbody>
     </table>
     </div>
+
+    ${rohertragBlock}
 
     ${qualBlock}
 
