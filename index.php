@@ -716,7 +716,7 @@ function opBerechnen() {
 function opRenderResult() {
   // Reuse the full berechnen calculation
   const s = state;
-  const hek = s.hekCosQuotient, uvp = s.uvpCosQuotient;
+  const hek = s.hekCosQuotient || 2.5, uvp = s.uvpCosQuotient || 5.0;
   const steuer = s.steuer||0;
   const vMode = s.vereinMode||'hek', hdMode = s.haendlerMode||'hek', spMode = s.sponsoringMode||'hek';
   const results = s.years.map(yr => {

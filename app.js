@@ -507,7 +507,7 @@ function berechnen(){
   collectStep(3);
   collectStep(5);
   const s=state;
-  const hek=s.hekCosQuotient, uvp=s.uvpCosQuotient;
+  const hek=s.hekCosQuotient||2.5, uvp=s.uvpCosQuotient||5.0;
   const steuer=s.steuer||0;
   const vMode=s.vereinMode||'hek', hdMode=s.haendlerMode||'hek', spMode=s.sponsoringMode||'hek';
   const results=s.years.map(yr=>{
@@ -611,7 +611,7 @@ function renderResult(results,totalNetto,totalInvest,totalDB,totalDbQuote){
   }
 
   const totalHdRoh=results.reduce((a,r)=>a+r.hdRohertrag,0);
-  const hasHdRoh=results.some(r=>r.hdRohertrag!==0);
+  const hasHdRoh=results.some(r=>r.hdBrutto>0);
   const rohertragBlock=hasHdRoh?`
     <div class="section-head"><div class="section-head-line"></div><div class="section-head-label">${t('rohertrag.title')}</div><div class="section-head-line"></div></div>
     <div class="rohertrag-strip">
