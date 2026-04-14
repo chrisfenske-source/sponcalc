@@ -753,6 +753,13 @@ function opRenderResult() {
     else{hdCos=hdB/uvp+hdFw/hek;}
     const hdDB1 = hdNetto-hdCos;
 
+    // Händler-Rohertrag (Händler-Perspektive, nur Direktumsatz)
+    const hdUvpEquiv = hdMode==='hek' ? hdB*(uvp/hek) : hdB;
+    const hdErloes = hdUvpEquiv*(1-s.vereinNachkauf)/(1+steuer);
+    const hdEinkauf = hdMode==='hek' ? hdB*(1-s.haendlerNachkauf) : hdB*(hek/uvp)*(1-s.haendlerNachkauf);
+    const hdFwKosten = hdFw*(1-s.haendlerFreiware);
+    const hdRohertrag = hdErloes-hdEinkauf-hdFwKosten;
+
     // Händler indirekt
     const hiB = hdMode==='hek' ? yr.haendlerIndirektHek : yr.haendlerIndirektUvp;
     let hiRabatt, hiErloess, hiNetto, hiCos;
@@ -774,7 +781,7 @@ function opRenderResult() {
     const gesamtNetto = vereinNetto+hdNetto+hiNetto;
     const gesamtDB = vereinDB1+hdDB1+hiDB1-sponsoringInvest-sonstige;
     const dbQuote = gesamtNetto>0?gesamtDB/gesamtNetto:0;
-    return {label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
+    return {label:yr.label,cashCost,freiwareCos:freiwareCosVal,sponsoringInvest,vereinBrutto,vereinRabatt,vereinErloess,vereinNetto,vereinCos,vereinDB1,hdBrutto,hdRabatt,hdErloess,hdNetto,hdCos,hdDB1,hdRohertrag,hiBrutto,hiRabatt,hiErloess,hiNetto,hiCos,hiDB1,sonstige,gesamtNetto,gesamtDB,dbQuote};
   });
   const totalNetto = results.reduce((a,r)=>a+r.gesamtNetto,0);
   const totalInvest = results.reduce((a,r)=>a+r.sponsoringInvest+r.sonstige,0);
